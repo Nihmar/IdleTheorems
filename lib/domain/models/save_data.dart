@@ -45,10 +45,12 @@ class PrestigeState {
 
 class TrendState {
   /// Empty string = no trend active (rotating trends arrive in phase 3).
-  String activeSubject = '';
+  String activeSubject;
   DateTime? endsAt;
-  String nextSubject = '';
+  String nextSubject;
   DateTime? nextStartsAt;
+
+  TrendState({this.activeSubject = '', this.endsAt, this.nextSubject = '', this.nextStartsAt});
 
   factory TrendState.fromJson(Map<String, dynamic> json) => TrendState(
         activeSubject: json['active_subject'] as String? ?? '',
@@ -71,9 +73,11 @@ class TrendState {
 
 class Settings {
   /// 'chalkboard' | 'notebook'
-  String theme = 'chalkboard';
-  bool sound = true;
-  bool reducedMotion = false;
+  String theme;
+  bool sound;
+  bool reducedMotion;
+
+  Settings({this.theme = 'chalkboard', this.sound = true, this.reducedMotion = false});
 
   factory Settings.fromJson(Map<String, dynamic> json) => Settings(
         theme: json['theme'] as String? ?? 'chalkboard',
@@ -90,12 +94,21 @@ class Settings {
 
 /// Flavor/export only — never read by game logic (plan section 14.2).
 class Stats {
-  int totalClicks = 0;
-  int papersPublished = 0; // lifetime across prestiges
-  int papersRejected = 0;
-  int retractions = 0;
-  int conjecturesSolved = 0;
-  int playtimeMs = 0;
+  int totalClicks;
+  int papersPublished; // lifetime across prestiges
+  int papersRejected;
+  int retractions;
+  int conjecturesSolved;
+  int playtimeMs;
+
+  Stats({
+    this.totalClicks = 0,
+    this.papersPublished = 0,
+    this.papersRejected = 0,
+    this.retractions = 0,
+    this.conjecturesSolved = 0,
+    this.playtimeMs = 0,
+  });
 
   factory Stats.fromJson(Map<String, dynamic> json) => Stats(
         totalClicks: json['total_clicks'] as int? ?? 0,
@@ -125,6 +138,8 @@ class SaveData {
   static const int currentVersion = 3;
 
   int version;
+  /// Player-chosen mathematician name; empty until chosen (additive field).
+  String playerName;
   DateTime savedAt;
   DateTime lastLoadedAt;
   Resources resources;
@@ -148,6 +163,7 @@ class SaveData {
 
   SaveData({
     required this.version,
+    this.playerName = '',
     required this.savedAt,
     required this.lastLoadedAt,
     required this.resources,
@@ -193,6 +209,7 @@ class SaveData {
 
   Map<String, dynamic> toJson() => {
         'version': version,
+        'player_name': playerName,
         'saved_at_ms': savedAt.millisecondsSinceEpoch,
         'last_loaded_at_ms': lastLoadedAt.millisecondsSinceEpoch,
         'resources': {
@@ -224,6 +241,7 @@ class SaveData {
     final raw = migrate(json);
     return SaveData(
       version: raw['version'] as int,
+      playerName: raw['player_name'] as String? ?? '',
       savedAt: DateTime.fromMillisecondsSinceEpoch(raw['saved_at_ms'] as int),
       lastLoadedAt: DateTime.fromMillisecondsSinceEpoch(raw['last_loaded_at_ms'] as int),
       resources: Resources(

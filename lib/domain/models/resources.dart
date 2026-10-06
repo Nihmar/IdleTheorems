@@ -10,6 +10,8 @@ class Resources {
 
   Resources({this.counting = 0, this.proofing = 0, this.fame = 0});
 
+  double get total => counting + proofing + fame;
+
   void gain(double countingGain, [double proofingGain = 0, double fameGain = 0]) {
     counting += countingGain;
     proofing += proofingGain;

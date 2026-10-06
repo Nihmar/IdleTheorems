@@ -1,5 +1,3 @@
-import 'resources.dart';
-
 /// Which resource an item is paid with / produces.
 enum ResourceKind { counting, proofing, fame }
 

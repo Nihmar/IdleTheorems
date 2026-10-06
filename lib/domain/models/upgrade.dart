@@ -1,4 +1,4 @@
-import 'resources.dart';
+import 'producers.dart';
 
 /// Repeatable upgrades with exponential cost (sections 13.1-13.2, 13.5).
 class UpgradeDef {

@@ -8,15 +8,19 @@ import 'save_data.dart';
 /// Transient only — never persisted (section 14.2 rule).
 class PaperJob {
   double remainingSeconds;
-  final bool revisionBonus;
+  bool revisionBonus;
+  /// True while waiting for the half-cost rewrite payment.
+  bool awaitingRewrite;
 
-  PaperJob(this.remainingSeconds, {this.revisionBonus = false});
+  PaperJob(this.remainingSeconds, {this.revisionBonus = false, this.awaitingRewrite = false});
 }
 
 /// Runtime game state. Everything here maps 1:1 onto [SaveData] except
 /// transient fields marked as such. Systems mutate this object through the
 /// Riverpod notifier; UI reads it reactively.
 class GameState {
+  /// Empty until the player picks a name at startup.
+  String playerName = '';
   Resources resources = Resources();
   Map<String, double> lifetime = {'counting': 0, 'proofing': 0, 'fame': 0};
   CareerState career = CareerState();
@@ -55,6 +59,7 @@ class GameState {
     final t = now ?? DateTime.now();
     return SaveData(
       version: SaveData.currentVersion,
+      playerName: playerName,
       // Playtime accumulates across sessions (stats is flavor-only data).
       savedAt: t,
       lastLoadedAt: t,
@@ -98,6 +103,7 @@ class GameState {
 
   static GameState fromSave(SaveData save) {
     final s = GameState()
+      ..playerName = save.playerName
       ..savedAt = save.savedAt
       ..lastLoadedAt = save.lastLoadedAt
       ..resources = Resources(
