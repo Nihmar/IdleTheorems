@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../utils/number_format.dart';
+import '../theme/palette.dart';
 
 /// One resource readout in the HUD: name, current balance and rate/s.
 class ResourceCounter extends StatelessWidget {
@@ -22,9 +23,9 @@ class ResourceCounter extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.35),
+        color: Palette.surface,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+        border: Border.all(color: Palette.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -33,9 +34,9 @@ class ResourceCounter extends StatelessWidget {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 14, color: Colors.white70),
+              Icon(icon, size: 14, color: Palette.inkSoft),
               const SizedBox(width: 6),
-              Text(label, style: const TextStyle(color: Colors.white70, fontSize: 12)),
+              Text(label, style: const TextStyle(color: Palette.inkSoft, fontSize: 12)),
             ],
           ),
           const SizedBox(height: 2),
@@ -45,12 +46,12 @@ class ResourceCounter extends StatelessWidget {
               fontFamily: 'monospace',
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: Colors.white,
+              color: Palette.ink,
             ),
           ),
           Text(
             '+${formatRate(perSecond)}',
-            style: const TextStyle(fontFamily: 'monospace', fontSize: 11, color: Colors.white54),
+            style: const TextStyle(fontFamily: 'monospace', fontSize: 11, color: Palette.inkSoft),
           ),
         ],
       ),

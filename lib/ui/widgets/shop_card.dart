@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../domain/models/producers.dart';
 import '../../utils/number_format.dart';
+import '../theme/palette.dart';
 
 /// One buyable row in the shop: title, effect, cost and a buy button.
 class ShopCard extends StatelessWidget {
@@ -33,9 +34,9 @@ class ShopCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.35),
+        color: Palette.surface,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+        border: Border.all(color: Palette.border),
       ),
       child: Row(
         children: [
@@ -48,22 +49,22 @@ class ShopCard extends StatelessWidget {
                     Flexible(
                       child: Text(name,
                           style: const TextStyle(
-                              color: Colors.white, fontWeight: FontWeight.w600)),
+                              color: Palette.ink, fontWeight: FontWeight.w600)),
                     ),
                     if (owned != null) ...[
                       const SizedBox(width: 8),
                       Text('x$owned',
                           style: const TextStyle(
-                              color: Color(0xFF9CCC65), fontFamily: 'monospace')),
+                              color: Palette.action, fontFamily: 'monospace')),
                     ],
                   ],
                 ),
                 const SizedBox(height: 2),
                 Text(description,
-                    style: const TextStyle(color: Colors.white54, fontSize: 12)),
+                    style: const TextStyle(color: Palette.inkSoft, fontSize: 12)),
                 if (lockedReason != null)
                   Text(lockedReason!,
-                      style: const TextStyle(color: Color(0xFFFFB74D), fontSize: 12)),
+                      style: const TextStyle(color: Palette.warn, fontSize: 12)),
               ],
             ),
           ),
@@ -73,10 +74,10 @@ class ShopCard extends StatelessWidget {
             child: FilledButton(
               onPressed: enabled ? onBuy : null,
               style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFF9CCC65),
+                backgroundColor: Palette.action,
                 foregroundColor: Colors.black,
-                disabledBackgroundColor: Colors.white.withValues(alpha: 0.12),
-                disabledForegroundColor: Colors.white38,
+                disabledBackgroundColor: Palette.surfaceAlt,
+                disabledForegroundColor: Palette.inkFaint,
                 minimumSize: const Size(96, 36),
               ),
               child: Text(costLabel,
