@@ -71,6 +71,18 @@ class TrendState {
       };
 }
 
+/// A future retraction waiting to hit an accepted paper (section 2).
+class ScheduledRetraction {
+  final DateTime dueAt;
+
+  ScheduledRetraction(this.dueAt);
+
+  Map<String, dynamic> toJson() => {'due_at_ms': dueAt.millisecondsSinceEpoch};
+
+  factory ScheduledRetraction.fromJson(Map<String, dynamic> json) =>
+      ScheduledRetraction(DateTime.fromMillisecondsSinceEpoch(json['due_at_ms'] as int));
+}
+
 class Settings {
   /// 'chalkboard' | 'notebook'
   String theme;
@@ -158,6 +170,11 @@ class SaveData {
   double conjCountMult;
   double conjProofMult;
   double conjGlobalMult;
+  /// Burnout stress 0..1 and current burnout end (additive fields, §13.10).
+  double stress;
+  DateTime? burnedOutUntil;
+  /// Accepted papers whose error may surface later (additive field, §2).
+  List<ScheduledRetraction> scheduledRetractions;
   PrestigeState prestige;
   TrendState trend;
   int metodoLevel;
@@ -185,6 +202,9 @@ class SaveData {
     this.conjCountMult = 1,
     this.conjProofMult = 1,
     this.conjGlobalMult = 1,
+    this.stress = 0,
+    this.burnedOutUntil,
+    this.scheduledRetractions = const [],
     required this.prestige,
     required this.trend,
     required this.metodoLevel,
@@ -243,6 +263,10 @@ class SaveData {
         'conj_count_mult': conjCountMult,
         'conj_proof_mult': conjProofMult,
         'conj_global_mult': conjGlobalMult,
+        'stress': stress,
+        'burned_out_until_ms': burnedOutUntil?.millisecondsSinceEpoch,
+        'scheduled_retractions':
+            scheduledRetractions.map((r) => r.toJson()).toList(),
         'prestige': prestige.toJson(),
         'trend': trend.toJson(),
         'metodo_level': metodoLevel,
@@ -285,6 +309,13 @@ class SaveData {
       conjCountMult: (raw['conj_count_mult'] as num?)?.toDouble() ?? 1,
       conjProofMult: (raw['conj_proof_mult'] as num?)?.toDouble() ?? 1,
       conjGlobalMult: (raw['conj_global_mult'] as num?)?.toDouble() ?? 1,
+      stress: (raw['stress'] as num?)?.toDouble() ?? 0,
+      burnedOutUntil: raw['burned_out_until_ms'] == null
+          ? null
+          : DateTime.fromMillisecondsSinceEpoch(raw['burned_out_until_ms'] as int),
+      scheduledRetractions: (raw['scheduled_retractions'] as List<dynamic>? ?? [])
+          .map((e) => ScheduledRetraction.fromJson(e as Map<String, dynamic>))
+          .toList(),
       prestige: PrestigeState.fromJson(raw['prestige'] as Map<String, dynamic>),
       trend: TrendState.fromJson(raw['trend'] as Map<String, dynamic>),
       metodoLevel: raw['metodo_level'] as int? ?? 1,

@@ -35,6 +35,11 @@ class GameState {
   double conjectureCountingMult = 1;
   double conjectureProofingMult = 1;
   double conjectureGlobalMult = 1;
+  /// Burnout stress 0..1 and active burnout window (section 13.10).
+  double stress = 0;
+  DateTime? burnedOutUntil;
+  /// Accepted papers that may be retracted later (section 2).
+  List<ScheduledRetraction> scheduledRetractions = [];
   PrestigeState prestige = PrestigeState();
   TrendState trend = TrendState();
   int metodoLevel = 1;
@@ -48,6 +53,9 @@ class GameState {
   DateTime lastLoadedAt = DateTime.now();
   /// Transient: session start for playtime accounting.
   DateTime sessionStartedAt = DateTime.now();
+  /// Transient: short-lived HUD notice (never persisted).
+  String? transientNotice;
+  DateTime? transientNoticeUntil;
 
   /// Total gained (current + cumulative) helper used by career gates.
   double lifetimeOf(ResourceKind kind) => lifetime[kind.key] ?? 0;
@@ -81,6 +89,9 @@ class GameState {
       conjCountMult: conjectureCountingMult,
       conjProofMult: conjectureProofingMult,
       conjGlobalMult: conjectureGlobalMult,
+      stress: stress,
+      burnedOutUntil: burnedOutUntil,
+      scheduledRetractions: List.of(scheduledRetractions),
       prestige: PrestigeState(
         legacy: prestige.legacy,
         prestigesCount: prestige.prestigesCount,
@@ -134,6 +145,9 @@ class GameState {
       ..conjectureCountingMult = save.conjCountMult
       ..conjectureProofingMult = save.conjProofMult
       ..conjectureGlobalMult = save.conjGlobalMult
+      ..stress = save.stress
+      ..burnedOutUntil = save.burnedOutUntil
+      ..scheduledRetractions = List.of(save.scheduledRetractions)
       ..prestige = PrestigeState(
           legacy: save.prestige.legacy,
           prestigesCount: save.prestige.prestigesCount,
