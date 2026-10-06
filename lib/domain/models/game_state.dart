@@ -45,6 +45,8 @@ class GameState {
   int metodoLevel = 1;
   int metodoXp = 0;
   int papersInRun = 0;
+  /// Cosmetic titles earned by proving open problems (§3 endgame).
+  List<String> titles = [];
   /// Transient: active writing jobs. Rebuilt from nothing on load.
   List<PaperJob> activePapers = [];
   Settings settings = Settings();
@@ -107,6 +109,7 @@ class GameState {
       metodoLevel: metodoLevel,
       metodoXp: metodoXp,
       papersInRun: papersInRun,
+      titles: List.of(titles),
       settings: Settings(
         theme: settings.theme,
         sound: settings.sound,
@@ -162,6 +165,7 @@ class GameState {
       ..metodoLevel = save.metodoLevel
       ..metodoXp = save.metodoXp
       ..papersInRun = save.papersInRun
+      ..titles = List.of(save.titles)
       ..settings = Settings(
           theme: save.settings.theme,
           sound: save.settings.sound,
