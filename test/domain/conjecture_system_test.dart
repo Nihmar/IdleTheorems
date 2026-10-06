@@ -15,6 +15,12 @@ GameState _postdoc({List<String> completed = const []}) => GameState()
   ..branches = {for (final b in completed) b: BranchProgress(completed: true)}
   ..resources.gain(1e12, 1e12, 1e12);
 
+/// Same, but at Professor — required for endgame open problems (§3).
+GameState _professor({List<String> completed = const []}) => GameState()
+  ..career.stage = CareerStage.professor
+  ..branches = {for (final b in completed) b: BranchProgress(completed: true)}
+  ..resources.gain(1e12, 1e12, 1e12);
+
 int _seedWhere(bool Function(double) condition) {
   for (var i = 1; i < 1000; i++) {
     if (condition(Random(i).nextDouble())) return i;
@@ -67,7 +73,7 @@ void main() {
 
     test('one active discovery per branch', () {
       final svc = ConjectureSystem();
-      final s = _postdoc(completed: ['number_theory']);
+      final s = _professor(completed: ['number_theory']);
       expect(svc.formulate(s, 'goldbach'), isTrue);
       // Collatz shares number_theory with Goldbach.
       expect(svc.slotsAvailable(s, 'collatz'), isFalse);
@@ -177,7 +183,7 @@ void main() {
       final p = svc.successProbability(1, 5); // tier 5 at Metodo 1 -> 0.18
       final seed = _seedWhere((r) => r < p);
       final svcSeeded = ConjectureSystem(rng: Random(seed));
-      final s = _postdoc(completed: ['number_theory']);
+      final s = _professor(completed: ['number_theory']);
       svcSeeded.formulate(s, 'goldbach');
       s.conjectures.single.progress = 98;
       expect(svcSeeded.workSession(s, 'goldbach'), ConjectureOutcome.proved);
@@ -195,6 +201,44 @@ void main() {
       final base = const ProductionSystem()
           .compute(_postdoc()..producerLevels['guided_exercises'] = 1);
       expect(rates.countingPerSec / base.countingPerSec, closeTo(1.875, 1e-9));
+    });
+  });
+
+  group('endgame gating (section 3)', () {
+    test('open problems stay sealed below Professor', () {
+      final svc = ConjectureSystem();
+      final s = _postdoc(completed: ['number_theory']);
+      expect(svc.endgameLocked(s, conjectureCatalog['goldbach']!), isTrue);
+      expect(svc.canFormulate(s, 'goldbach'), isFalse);
+    });
+
+    test('Professor with completed branches may open the frontiers', () {
+      final svc = ConjectureSystem();
+      final s = _professor(completed: ['number_theory']);
+      expect(svc.endgameLocked(s, conjectureCatalog['goldbach']!), isFalse);
+      expect(svc.canFormulate(s, 'goldbach'), isTrue);
+    });
+
+    test('non-endgame definitions ignore the professor gate', () {
+      final svc = ConjectureSystem();
+      expect(
+          svc.endgameLocked(_postdoc(), conjectureCatalog['collatz']!),
+          isFalse);
+    });
+  });
+
+  group('cosmetic titles', () {
+    test('proving an open problem grants its title once', () {
+      final p = ConjectureSystem().successProbability(1, 5); // -> 0.18
+      final seed = _seedWhere((r) => r < p);
+      final svc = ConjectureSystem(rng: Random(seed));
+      final s = _professor(completed: ['number_theory']);
+      svc.formulate(s, 'goldbach');
+      s.conjectures.single.progress = 98;
+      expect(svc.workSession(s, 'goldbach'), ConjectureOutcome.proved);
+      expect(s.titles, contains('Prime Summarizer'));
+      expect(conjectureCatalog['goldbach']!.rewardSummary,
+          contains('"Prime Summarizer" title'));
     });
   });
 }
