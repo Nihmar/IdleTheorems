@@ -1,6 +1,7 @@
 import '../../domain/models/game_state.dart';
 import '../../domain/models/producers.dart';
 import '../../domain/services/subject_service.dart';
+import 'apprentice_service.dart';
 import 'friction_system.dart';
 import 'prestige_service.dart';
 
@@ -46,6 +47,8 @@ class ProductionSystem {
     for (final p in countingProducers) {
       c += (s.producerLevels[p.id] ?? 0) * p.outputPerSec;
     }
+    // Apprentices: narrated automation adding flat Counting (section 5).
+    c += const ApprenticeService().outputOf(s.career.apprentices);
     c *= countingMultiplier(s);
     c = c * m.countingMultiplier + m.countingRateAdd;
     // Gauss: Counting ×2 (prestige perk, section 13.9).
