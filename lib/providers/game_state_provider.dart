@@ -220,6 +220,7 @@ class GameStateNotifier extends Notifier<GameState> {
     final ramanujanBonus = state.prestige.mathematicians.contains('ramanujan')
         ? 0.10
         : 0.0;
+    final titlesBefore = state.titles.length;
     final outcome = _conjectures.workSession(
         state, id,
         trendBonus: trendBonus, ramanujanBonus: ramanujanBonus);
@@ -228,6 +229,12 @@ class GameStateNotifier extends Notifier<GameState> {
         _gainMethodXp(d.failureMethodXp);
       } else {
         state.stats.conjecturesSolved++;
+        if (state.titles.length > titlesBefore) {
+          _notice(
+              '${d.name} is PROVEN — "${state.titles.last}" joins your legend.');
+        } else {
+          _notice('You proved ${d.name}!');
+        }
       }
     }
     _afterMutation();

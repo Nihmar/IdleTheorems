@@ -113,6 +113,16 @@ void main() {
     expect(find.text('Double Counting Lemmas'), findsOneWidget);
     // A fresh student cannot formulate yet.
     expect(find.text('Unlocks at Postdoc'), findsWidgets);
+    // Endgame frontiers sit below the fold of the lazy list.
+    for (var i = 0;
+        i < 10 && find.text('FRONTIERS').evaluate().isEmpty;
+        i++) {
+      await tester.dragFrom(const Offset(400, 500), const Offset(0, -400));
+      await tester.pumpAndSettle();
+    }
+    expect(find.text('FRONTIERS'), findsOneWidget);
+    expect(find.text('Goldbach\u2019s Conjecture'), findsOneWidget);
+    expect(find.text('Unlocks at Professor'), findsWidgets);
   });
 
   testWidgets('stressed state offers a sabbatical in the shop', (tester) async {

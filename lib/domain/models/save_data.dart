@@ -193,6 +193,9 @@ class SaveData {
   int metodoXp;
   /// Papers started this run: drives paper cost scaling and citations.
   int papersInRun;
+  /// Cosmetic titles earned by proving open problems (§3 endgame);
+  /// persists across prestiges.
+  List<String> titles;
   Settings settings;
   Stats stats;
 
@@ -221,6 +224,7 @@ class SaveData {
     required this.metodoLevel,
     required this.metodoXp,
     required this.papersInRun,
+    this.titles = const [],
     required this.settings,
     required this.stats,
   });
@@ -283,6 +287,7 @@ class SaveData {
         'metodo_level': metodoLevel,
         'metodo_xp': metodoXp,
         'papers_in_run': papersInRun,
+        'titles': titles,
         'settings': settings.toJson(),
         'stats': stats.toJson(),
       };
@@ -332,6 +337,9 @@ class SaveData {
       metodoLevel: raw['metodo_level'] as int? ?? 1,
       metodoXp: raw['metodo_xp'] as int? ?? 0,
       papersInRun: raw['papers_in_run'] as int? ?? 0,
+      titles: (raw['titles'] as List<dynamic>? ?? const [])
+          .map((e) => e.toString())
+          .toList(),
       settings: Settings.fromJson(raw['settings'] as Map<String, dynamic>),
       stats: Stats.fromJson(raw['stats'] as Map<String, dynamic>),
     );

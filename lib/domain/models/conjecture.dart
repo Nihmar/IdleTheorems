@@ -8,7 +8,7 @@ extension ConjectureStatusKey on ConjectureStatus {
 }
 
 /// Kind of permanent reward granted when a conjecture is PROVEN.
-enum RewardType { productionMultiplier, fameBurst, legacyBonus }
+enum RewardType { productionMultiplier, fameBurst, legacyBonus, cosmeticTitle }
 
 class ConjectureReward {
   final RewardType type;
@@ -17,8 +17,14 @@ class ConjectureReward {
   final double value;
   /// 'counting' | 'proofing' | 'all' — only meaningful for multipliers.
   final String target;
+  /// Title name — only meaningful for [RewardType.cosmeticTitle].
+  final String title;
 
-  const ConjectureReward({required this.type, required this.value, this.target = ''});
+  const ConjectureReward(
+      {required this.type,
+      required this.value,
+      this.target = '',
+      this.title = ''});
 }
 
 class ConjectureState {
@@ -118,6 +124,8 @@ class ConjectureDef {
           return '+${r.value.round()} Fame burst';
         case RewardType.legacyBonus:
           return '+${r.value.round()} Legacy';
+        case RewardType.cosmeticTitle:
+          return '"${r.title}" title';
       }
     }).join(', ');
   }
@@ -240,6 +248,7 @@ const Map<String, ConjectureDef> conjectureCatalog = {
     successRewards: [
       ConjectureReward(type: RewardType.fameBurst, value: 10000),
       ConjectureReward(type: RewardType.legacyBonus, value: 100),
+      ConjectureReward(type: RewardType.cosmeticTitle, value: 0, title: 'Taming 3n+1'),
     ],
     retryCooldown: Duration(hours: 48),
   ),
@@ -255,6 +264,7 @@ const Map<String, ConjectureDef> conjectureCatalog = {
     successRewards: [
       ConjectureReward(type: RewardType.legacyBonus, value: 500),
       ConjectureReward(type: RewardType.productionMultiplier, value: 0.5, target: 'all'),
+      ConjectureReward(type: RewardType.cosmeticTitle, value: 0, title: 'Prime Summarizer'),
     ],
     retryCooldown: Duration(hours: 72),
     isEndgame: true,
@@ -270,6 +280,7 @@ const Map<String, ConjectureDef> conjectureCatalog = {
     successRewards: [
       ConjectureReward(type: RewardType.legacyBonus, value: 1000),
       ConjectureReward(type: RewardType.productionMultiplier, value: 1.0, target: 'all'),
+      ConjectureReward(type: RewardType.cosmeticTitle, value: 0, title: 'Zero Hunter'),
     ],
     retryCooldown: Duration(hours: 72),
     isEndgame: true,
@@ -285,6 +296,7 @@ const Map<String, ConjectureDef> conjectureCatalog = {
     successRewards: [
       ConjectureReward(type: RewardType.legacyBonus, value: 1000),
       ConjectureReward(type: RewardType.productionMultiplier, value: 1.0, target: 'counting'),
+      ConjectureReward(type: RewardType.cosmeticTitle, value: 0, title: 'Complexity Breaker'),
     ],
     retryCooldown: Duration(hours: 72),
     isEndgame: true,
@@ -300,6 +312,7 @@ const Map<String, ConjectureDef> conjectureCatalog = {
     successRewards: [
       ConjectureReward(type: RewardType.legacyBonus, value: 1000),
       ConjectureReward(type: RewardType.productionMultiplier, value: 1.0, target: 'proofing'),
+      ConjectureReward(type: RewardType.cosmeticTitle, value: 0, title: 'Flow Whisperer'),
     ],
     retryCooldown: Duration(hours: 72),
     isEndgame: true,
@@ -315,6 +328,7 @@ const Map<String, ConjectureDef> conjectureCatalog = {
     successRewards: [
       ConjectureReward(type: RewardType.legacyBonus, value: 1000),
       ConjectureReward(type: RewardType.productionMultiplier, value: 0.5, target: 'all'),
+      ConjectureReward(type: RewardType.cosmeticTitle, value: 0, title: 'Topologist Supreme'),
     ],
     retryCooldown: Duration(hours: 72),
     isEndgame: true,
@@ -330,6 +344,7 @@ const Map<String, ConjectureDef> conjectureCatalog = {
     successRewards: [
       ConjectureReward(type: RewardType.legacyBonus, value: 1000),
       ConjectureReward(type: RewardType.productionMultiplier, value: 1.0, target: 'all'),
+      ConjectureReward(type: RewardType.cosmeticTitle, value: 0, title: 'Elliptic Sage'),
     ],
     retryCooldown: Duration(hours: 72),
     isEndgame: true,

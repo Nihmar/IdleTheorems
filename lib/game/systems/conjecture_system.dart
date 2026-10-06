@@ -35,13 +35,19 @@ class ConjectureSystem {
 
   bool isFormulated(GameState s, String id) => stateOf(s, id) != null;
 
-  /// Postdoc gate (section 5) plus every required branch COMPLETED.
+  /// Postdoc gate (section 5), professor-only gate for open problems
+  /// (section 3 endgame) plus every required branch COMPLETED.
   bool canFormulate(GameState s, String id) {
     final d = conjectureCatalog[id];
     if (d == null || stateOf(s, id) != null) return false;
     if (s.career.stage.index < CareerStage.postdoc.index) return false;
+    if (endgameLocked(s, d)) return false;
     return d.subjects.every((b) => _subjects.isCompleted(s, b));
   }
+
+  /// Open problems stay sealed until the player reaches Professor.
+  bool endgameLocked(GameState s, ConjectureDef d) =>
+      d.isEndgame && s.career.stage != CareerStage.professor;
 
   List<String> missingSubjects(GameState s, String id) {
     final d = conjectureCatalog[id];
@@ -174,6 +180,10 @@ class ConjectureSystem {
         case RewardType.legacyBonus:
           s.prestige.legacy += r.value.round();
           s.prestige.legacyAllTime += r.value.round();
+        case RewardType.cosmeticTitle:
+          if (r.title.isNotEmpty && !s.titles.contains(r.title)) {
+            s.titles.add(r.title);
+          }
       }
     }
   }

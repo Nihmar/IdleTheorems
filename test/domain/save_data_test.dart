@@ -11,6 +11,7 @@ void main() {
       original.prestige.legacy = 7;
       original.metodoLevel = 4;
       original.papersInRun = 2;
+      original.titles = ['Prime Summarizer', 'Zero Hunter'];
       original.techniques.add('elementary_formalization');
       original.producerLevels['guided_exercises'] = 3;
 
@@ -26,6 +27,7 @@ void main() {
       expect(restored.prestige.legacy, 7);
       expect(restored.metodoLevel, 4);
       expect(restored.papersInRun, 2);
+      expect(restored.titles, equals(['Prime Summarizer', 'Zero Hunter']));
       expect(restored.techniques, contains('elementary_formalization'));
       expect(restored.producerLevels['guided_exercises'], 3);
     });
