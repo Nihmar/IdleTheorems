@@ -17,6 +17,7 @@ import '../../domain/services/subject_service.dart';
 import '../../game/systems/career_system.dart';
 import '../../game/systems/conjecture_system.dart';
 import '../../game/systems/friction_system.dart';
+import '../../game/systems/trend_service.dart';
 import '../../game/systems/production_system.dart';
 import '../../providers/game_state_provider.dart';
 import '../../utils/number_format.dart';
@@ -67,6 +68,7 @@ class MainOverlay extends ConsumerWidget {
     final rates = const ProductionSystem()
         .compute(s, const SubjectService().modifiers(s));
     final services = const SubjectService();
+    final trendSvc = const TrendService();
     final focusDef = s.activeSubjectId.isEmpty ? null : subjectCatalog[s.activeSubjectId];
     final lastAwayReport = ref.watch(gameStateProvider.notifier).lastAwayReport;
 
@@ -101,22 +103,44 @@ class MainOverlay extends ConsumerWidget {
                                 fontSize: 16,
                                 fontStyle: FontStyle.italic,
                                 fontFamily: 'serif')),
-                        const Spacer(),
-                        if (s.playerName.isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.only(right: 8),
-                            child:
-                                _Chip(label: s.playerName, icon: Icons.badge_outlined),
-                          ),
-                        _Chip(label: s.career.stage.label, icon: Icons.school_outlined),
                         const SizedBox(width: 8),
-                        _Chip(label: 'Metodo Lv ${s.metodoLevel}', icon: Icons.psychology_alt),
-                        if (focusDef != null)
-                          _Chip(
-                            label:
-                                '${focusDef.name} ${services.theoremsOf(s, focusDef.id)}/${masteryNeeded(focusDef.level)}',
-                            icon: Icons.category_outlined,
-                          ),
+                        Expanded(
+                            child: SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                child: Row(children: [
+                              if (s.playerName.isNotEmpty)
+                                _Chip(label: s.playerName,
+                                    icon: Icons.badge_outlined),
+                              const SizedBox(width: 8),
+                              _Chip(label: s.career.stage.label,
+                                  icon: Icons.school_outlined),
+                              const SizedBox(width: 8),
+                              _Chip(label: 'Metodo Lv ${s.metodoLevel}',
+                                  icon: Icons.psychology_alt),
+                              if (focusDef != null) ...[
+                                const SizedBox(width: 8),
+                                _Chip(
+                                  label:
+                                      '${focusDef.name} ${services.theoremsOf(s, focusDef.id)}/${masteryNeeded(focusDef.level)}',
+                                  icon: Icons.category_outlined,
+                                ),
+                              ],
+                              if (trendSvc.isActive(s)) ...[
+                                const SizedBox(width: 8),
+                                _Chip(
+                                  label: 'Trend: ${subjectCatalog[s.trend.activeSubject]?.name ?? ''}'
+                                      ' · ${s.trend.endsAt!.difference(DateTime.now()).inHours}h',
+                                  icon: Icons.trending_up,
+                                ),
+                              ],
+                              if (trendSvc.shouldAnnounceNext(s)) ...[
+                                const SizedBox(width: 8),
+                                _Chip(
+                                  label: 'Up next: ${subjectCatalog[s.trend.nextSubject]?.name ?? ''}',
+                                  icon: Icons.schedule,
+                                ),
+                              ],
+                            ]))),
                       ]),
                       const SizedBox(height: 8),
                       Row(children: [
