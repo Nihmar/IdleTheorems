@@ -1,5 +1,6 @@
 import '../../domain/models/game_state.dart';
 import '../../domain/models/producers.dart';
+import '../../domain/services/subject_service.dart';
 
 /// Per-second production rates derived from the current state.
 class ProductionRates {
@@ -36,12 +37,15 @@ class ProductionSystem {
     return m;
   }
 
-  ProductionRates compute(GameState s) {
+  ProductionRates compute(GameState s, [SubjectModifiers? mods]) {
+    final m = mods ?? const SubjectModifiers();
+
     var c = 0.0;
     for (final p in countingProducers) {
       c += (s.producerLevels[p.id] ?? 0) * p.outputPerSec;
     }
     c *= countingMultiplier(s);
+    c = c * m.countingMultiplier + m.countingRateAdd;
 
     // Base proofing only exists once elementary formalization is learned;
     // techniques and collaborators scale everything that produces P.
@@ -52,16 +56,30 @@ class ProductionSystem {
     }
     final pMult =
         _techniqueMultiplier(s) * (1 + 0.5 * s.levelOf('collaborator'));
-    final p = (baseP + producersP) * pMult;
+    var p = (baseP + producersP) * pMult;
+    p = p * m.proofingMultiplier + m.proofingRateAdd;
+
+    // Completed subjects can compound output while actively playing
+    // (+0.5%/min since session start, capped at x2).
+    if (m.sessionCompounding) {
+      final minutes = DateTime.now().difference(s.sessionStartedAt).inMinutes.toDouble();
+      final k = (1 + 0.005 * minutes).clamp(1.0, 2.0);
+      c *= k;
+      p *= k;
+    }
+
+    // Category Theory's grand unification touches every gain channel.
+    c *= m.globalResourceMult;
+    p *= m.globalResourceMult;
 
     // Passive citations: 0.01 F/s per published paper this run.
-    final f = 0.01 * s.papersInRun * fameMultiplier(s);
+    final f = 0.01 * s.papersInRun * fameMultiplier(s) * m.globalResourceMult;
 
     return ProductionRates(c, p, f);
   }
 
-  void tick(GameState s, double dt) {
-    final r = compute(s);
+  void tick(GameState s, double dt, [SubjectModifiers? mods]) {
+    final r = compute(s, mods);
     s.gain(r.countingPerSec * dt, r.proofingPerSec * dt, r.famePerSec * dt);
   }
 }

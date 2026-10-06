@@ -146,6 +146,8 @@ class SaveData {
   Map<String, double> lifetime;
   CareerState career;
   Map<String, BranchProgress> branches;
+  /// Focused research target id ('' = none); additive field.
+  String activeSubjectId;
   Map<String, int> producerLevels;
   Map<String, int> upgradeLevels;
   /// Owned technique ids (addition vs doc draft).
@@ -170,6 +172,7 @@ class SaveData {
     required this.lifetime,
     required this.career,
     required this.branches,
+    this.activeSubjectId = '',
     required this.producerLevels,
     required this.upgradeLevels,
     required this.techniques,
@@ -224,6 +227,7 @@ class SaveData {
           'apprentices': career.apprentices,
         },
         'branches': branches.map((k, v) => MapEntry(k, v.toJson())),
+        'active_subject_id': activeSubjectId,
         'producer_levels': producerLevels,
         'upgrade_levels': upgradeLevels,
         'techniques': techniques,
@@ -258,6 +262,7 @@ class SaveData {
       ),
       branches: (raw['branches'] as Map<String, dynamic>? ?? {})
           .map((k, v) => MapEntry(k, BranchProgress.fromJson(v as Map<String, dynamic>))),
+      activeSubjectId: raw['active_subject_id'] as String? ?? '',
       producerLevels: (raw['producer_levels'] as Map<String, dynamic>? ?? {})
           .map((k, v) => MapEntry(k, v as int)),
       upgradeLevels: (raw['upgrade_levels'] as Map<String, dynamic>? ?? {})

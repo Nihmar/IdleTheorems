@@ -7,8 +7,11 @@ import 'package:katex/katex.dart';
 import '../../domain/models/game_state.dart';
 import '../../domain/models/producers.dart';
 import '../../domain/models/resources.dart';
+import '../../domain/models/subject.dart';
 import '../../domain/models/upgrade.dart';
 import '../../domain/services/balance_service.dart';
+import '../../domain/services/offline_service.dart';
+import '../../domain/services/subject_service.dart';
 import '../../game/systems/career_system.dart';
 import '../../game/systems/production_system.dart';
 import '../../providers/game_state_provider.dart';
@@ -57,7 +60,11 @@ class MainOverlay extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final s = ref.watch(gameStateProvider);
-    final rates = const ProductionSystem().compute(s);
+    final rates = const ProductionSystem()
+        .compute(s, const SubjectService().modifiers(s));
+    final services = const SubjectService();
+    final focusDef = s.activeSubjectId.isEmpty ? null : subjectCatalog[s.activeSubjectId];
+    final lastAwayReport = ref.watch(gameStateProvider.notifier).lastAwayReport;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -100,6 +107,12 @@ class MainOverlay extends ConsumerWidget {
                         _Chip(label: s.career.stage.label, icon: Icons.school_outlined),
                         const SizedBox(width: 8),
                         _Chip(label: 'Metodo Lv ${s.metodoLevel}', icon: Icons.psychology_alt),
+                        if (focusDef != null)
+                          _Chip(
+                            label:
+                                '${focusDef.name} ${services.theoremsOf(s, focusDef.id)}/${masteryNeeded(focusDef.level)}',
+                            icon: Icons.category_outlined,
+                          ),
                       ]),
                       const SizedBox(height: 8),
                       Row(children: [
@@ -124,6 +137,16 @@ class MainOverlay extends ConsumerWidget {
                                 value: s.resources.fame,
                                 perSecond: rates.famePerSec)),
                       ]),
+                      if (lastAwayReport != null) ...[
+                        const SizedBox(height: 8),
+                        _AwayBanner(
+                          report: lastAwayReport,
+                          onDismiss: () =>
+                              ref
+                                  .read(gameStateProvider.notifier)
+                                  .dismissAwayReport(),
+                        ),
+                      ],
                       if (onboardingHint(s) != null) ...[
                         const SizedBox(height: 8),
                         Container(
@@ -202,15 +225,16 @@ class _BottomBar extends ConsumerStatefulWidget {
 
 class _BottomBarState extends ConsumerState<_BottomBar> {
   bool _shopOpen = false;
+  String _tab = 'shop'; // 'shop' | 'subjects'
 
   @override
   Widget build(BuildContext context) {
     final s = ref.watch(gameStateProvider);
     final balance = const BalanceService();
+    final services = const SubjectService();
+    final mods = services.modifiers(s);
+    final maxSlots = services.maxConcurrentPapers(s);
     final papersInProgress = s.activePapers.length;
-    final nextPaperDoneIn = papersInProgress == 0
-        ? null
-        : s.activePapers.map((j) => j.remainingSeconds).reduce(min);
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.end,
@@ -230,66 +254,70 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
                     children: [
                       Row(children: [
-                        const Text('Research shop',
-                            style: TextStyle(
+                        Text(_tab == 'shop' ? 'Research shop' : 'Subject tree',
+                            style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold)),
                         const Spacer(),
-                        if (papersInProgress > 0)
-                          Flexible(
-                              child: Text(
-                                  '$papersInProgress paper(s) in progress — next done in ~${nextPaperDoneIn!.ceil()}s',
-                                  style:
-                                      const TextStyle(color: Colors.white70, fontSize: 12))),
+                        _TabButton(
+                          label: 'Shop',
+                          selected: _tab == 'shop',
+                          onTap: () => setState(() => _tab = 'shop'),
+                        ),
+                        const SizedBox(width: 6),
+                        _TabButton(
+                          label: 'Subjects',
+                          selected: _tab == 'subjects',
+                          onTap: () => setState(() => _tab = 'subjects'),
+                        ),
                         IconButton(
                             onPressed: () => setState(() => _shopOpen = false),
                             icon: const Icon(Icons.close, color: Colors.white70)),
                       ]),
                       const SizedBox(height: 8),
-                      _sectionHeader('Counting'),
-                      for (final p in countingProducers)
-                        _producerRow(p),
-                      _sectionHeader('Techniques (one-time)'),
-                      for (final t in techniqueCatalogList)
-                        ShopCard(
-                          name: t.name,
-                          description: t.description,
-                          costLabel:
-                              s.techniques.contains(t.id) ? 'Owned' : formatCost(t.costCounting, ResourceKind.counting),
-                          canAfford: !s.techniques.contains(t.id) &&
-                              s.resources.canAfford(t.costCounting),
-                          onBuy: () => ref.read(gameStateProvider.notifier).buyTechnique(t.id),
+                      if (_tab == 'shop') ...[
+                        _sectionHeader('Counting'),
+                        for (final p in countingProducers)
+                          _producerRow(p),
+                        _sectionHeader('Techniques (one-time)'),
+                        for (final t in techniqueCatalogList)
+                          ShopCard(
+                            name: t.name,
+                            description: t.description,
+                            costLabel:
+                                s.techniques.contains(t.id) ? 'Owned' : formatCost(t.costCounting, ResourceKind.counting),
+                            canAfford: !s.techniques.contains(t.id) &&
+                                s.resources.canAfford(t.costCounting),
+                            onBuy: () => ref.read(gameStateProvider.notifier).buyTechnique(t.id),
+                          ),
+                        _sectionHeader('Proofing'),
+                        for (final p in proofingProducers)
+                          _producerRow(p),
+                        _sectionHeader('Upgrades'),
+                        for (final u in upgradeCatalogList)
+                          _upgradeRow(u, mods.upgradeCostFactor),
+                        _sectionHeader('Publication desk'),
+                        _paperDeskRow(balance, mods.paperCostFactor, maxSlots, papersInProgress),
+                        if (CareerSystem().canDefendThesis(s))
+                          ShopCard(
+                            name: 'Defend thesis',
+                            description: 'Advance to PhD (requires 1K cumulative Fame).',
+                            costLabel: formatCost(CareerSystem.thesisCostProofing, ResourceKind.proofing),
+                            canAfford: s.resources.canAfford(0, CareerSystem.thesisCostProofing),
+                            onBuy: () => ref.read(gameStateProvider.notifier).defendThesis(),
+                          ),
+                      ] else ...[
+                        _sectionHeader('Your fields of study'),
+                        const Padding(
+                          padding: EdgeInsets.only(bottom: 8),
+                          child: Text(
+                              'Focus a subject: every accepted paper masters one theorem inside it. Mastering a field activates its effect and unlocks the fields that build on it.',
+                              style: TextStyle(color: Colors.white70, fontSize: 12, height: 1.5)),
                         ),
-                      _sectionHeader('Proofing'),
-                      for (final p in proofingProducers)
-                        _producerRow(p),
-                      _sectionHeader('Upgrades'),
-                      for (final u in upgradeCatalogList)
-                        ShopCard(
-                          name: u.name,
-                          description: u.description,
-                          owned: s.levelOf(u.id),
-                          costLabel: formatCost(balance.upgradeCost(u, s.levelOf(u.id)), u.currency),
-                          canAfford: s.resources.canAffordOf(u.currency, balance.upgradeCost(u, s.levelOf(u.id))),
-                          onBuy: () => ref.read(gameStateProvider.notifier).buyUpgrade(u.id),
-                        ),
-                      _sectionHeader('Publication desk'),
-                      ShopCard(
-                        name: 'Publish paper',
-                        description: '~60s writing, then peer review. Fame on acceptance.',
-                        costLabel: formatCost(balance.paperCost(s.papersInRun), ResourceKind.proofing),
-                        canAfford: s.resources.canAfford(0, balance.paperCost(s.papersInRun)),
-                        onBuy: () => ref.read(gameStateProvider.notifier).startPaper(),
-                      ),
-                      if (CareerSystem().canDefendThesis(s))
-                        ShopCard(
-                          name: 'Defend thesis',
-                          description: 'Advance to PhD (requires 1K cumulative Fame).',
-                          costLabel: formatCost(CareerSystem.thesisCostProofing, ResourceKind.proofing),
-                          canAfford: s.resources.canAfford(0, CareerSystem.thesisCostProofing),
-                          onBuy: () => ref.read(gameStateProvider.notifier).defendThesis(),
-                        ),
+                        for (final def in subjectsByLevel())
+                          _subjectRow(def, services, s),
+                      ],
                     ],
                   )
                 : const SizedBox.shrink(),
@@ -311,7 +339,7 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
                   ),
                   icon: const Icon(Icons.edit_note),
                   label: Text(
-                      'Solve exercise (+${formatNumber(balance.clickPower(s.levelOf('study_tools')))})'),
+                      'Solve exercise (+${formatNumber(balance.clickPower(s.levelOf('study_tools')) * mods.clickMultiplier * mods.globalResourceMult)})'),
                 ),
               ),
               const SizedBox(width: 10),
@@ -345,12 +373,176 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
     );
   }
 
+  Widget _upgradeRow(UpgradeDef u, double discount) {
+    final owned = ref.read(gameStateProvider).levelOf(u.id);
+    final cost = const BalanceService().upgradeCost(u, owned) * discount;
+    return ShopCard(
+      name: u.name,
+      description: u.description,
+      owned: owned,
+      costLabel: formatCost(cost, u.currency),
+      canAfford: ref.read(gameStateProvider).resources.canAffordOf(u.currency, cost),
+      onBuy: () => ref.read(gameStateProvider.notifier).buyUpgrade(u.id),
+    );
+  }
+
+  Widget _paperDeskRow(BalanceService balance, double discount, int maxSlots, int busy) {
+    final s = ref.watch(gameStateProvider);
+    final allBusy = busy >= maxSlots;
+    final cost = balance.paperCost(s.papersInRun) * discount;
+    return ShopCard(
+      name: 'Publish paper ($busy/$maxSlots slots)',
+      description: allBusy
+          ? 'All writing slots are busy — wait for a review outcome.'
+          : '~60s writing, then peer review. Fame on acceptance.',
+      costLabel: formatCost(cost, ResourceKind.proofing),
+      canAfford: !allBusy && s.resources.canAfford(0, cost),
+      onBuy: () => ref.read(gameStateProvider.notifier).startPaper(),
+    );
+  }
+
+  Widget _subjectRow(SubjectDef def, SubjectService svc, GameState s) {
+    final done = svc.isCompleted(s, def.id);
+    final unlocked = svc.isUnlocked(s, def.id);
+    final focused = svc.isActive(s, def.id);
+    final mastered = svc.theoremsOf(s, def.id);
+    final need = masteryNeeded(def.level);
+    final missing = svc.missingPrereqs(s, def.id)
+        .map((id) => subjectCatalog[id]?.name ?? id)
+        .join(', ');
+    late final String status;
+    late final Color statusColor;
+    if (done) {
+      status = 'Mastered';
+      statusColor = _gold;
+    } else if (!unlocked) {
+      status = 'Locked — needs $missing';
+      statusColor = Colors.white38;
+    } else if (focused) {
+      status = 'Focused — $mastered/$need theorems';
+      statusColor = _gold;
+    } else {
+      status = '$mastered/$need theorems';
+      statusColor = Colors.white70;
+    }
+    final enabled = unlocked && !done;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: focused ? 0.45 : 0.3),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+            color:
+                focused ? _gold.withValues(alpha: 0.8) : Colors.white.withValues(alpha: 0.12)),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: enabled
+              ? () {
+                  final n = ref.read(gameStateProvider.notifier);
+                  if (focused) {
+                    n.clearFocus();
+                  } else {
+                    n.focusSubject(def.id);
+                  }
+                }
+              : null,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            child: Row(children: [
+              Icon(done ? Icons.check_circle : unlocked ? Icons.category_outlined : Icons.lock_outline,
+                  size: 20,
+                  color: statusColor),
+              const SizedBox(width: 10),
+              Expanded(
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(def.name,
+                    style: TextStyle(
+                        color: unlocked || done ? Colors.white : Colors.white54,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600)),
+                const SizedBox(height: 2),
+                Text(def.effectText,
+                    style: const TextStyle(color: Colors.white54, fontSize: 12)),
+              ])),
+              Text(status, style: TextStyle(color: statusColor, fontSize: 12)),
+            ]),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _sectionHeader(String title) => Padding(
         padding: const EdgeInsets.only(top: 12, bottom: 6),
         child: Text(title.toUpperCase(),
             style: const TextStyle(
                 color: Color(0xFF9CCC65), fontSize: 12, letterSpacing: 1.2)),
       );
+}
+
+/// Transient banner listing what was earned while the app stayed in the
+/// background (plan section 13.10). Dismissed manually from the HUD.
+class _AwayBanner extends StatelessWidget {
+  const _AwayBanner({required this.report, required this.onDismiss});
+
+  final OfflineReport report;
+  final VoidCallback onDismiss;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: _gold.withValues(alpha: 0.5)),
+      ),
+      child: Row(children: [
+        const Icon(Icons.hourglass_empty, size: 16, color: _gold),
+        const SizedBox(width: 8),
+        Expanded(
+            child: Text(
+                'While you were away: +${formatNumber(report.gained.counting)} C \u00b7 +${formatNumber(report.gained.proofing)} P \u00b7 +${formatNumber(report.gained.fame)} F',
+                style:
+                    const TextStyle(color: Colors.white, fontSize: 13))),
+        IconButton(
+            onPressed: onDismiss,
+            icon: const Icon(Icons.close, size: 16, color: Colors.white70)),
+      ]),
+    );
+  }
+}
+
+/// Small pill-style tab switcher used by the research panel header.
+class _TabButton extends StatelessWidget {
+  const _TabButton({required this.label, required this.selected, required this.onTap});
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: selected ? _gold.withValues(alpha: 0.18) : Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+              color: selected ? _gold.withValues(alpha: 0.6) : Colors.white.withValues(alpha: 0.2)),
+        ),
+        child: Text(label,
+            style: TextStyle(
+                color: selected ? _gold : Colors.white70,
+                fontSize: 12,
+                fontWeight: FontWeight.bold)),
+      ),
+    );
+  }
 }
 
 /// Full-screen first-launch prompt where the player picks their

@@ -2,7 +2,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_theorems/domain/models/game_state.dart';
 import 'package:idle_theorems/domain/models/producers.dart';
+import 'package:idle_theorems/domain/models/save_data.dart';
+import 'package:idle_theorems/domain/models/subject.dart';
 import 'package:idle_theorems/domain/services/balance_service.dart';
+import 'package:idle_theorems/domain/services/subject_service.dart';
+import 'package:idle_theorems/game/systems/production_system.dart';
 import 'package:idle_theorems/providers/game_state_provider.dart';
 
 void main() {
@@ -73,5 +77,70 @@ void main() {
     final s = container.read(gameStateProvider);
     expect(s.activePapers, isEmpty);
     expect(s.stats.papersPublished + s.stats.papersRejected, greaterThan(0));
+  });
+
+  test('cannot exceed concurrent paper slots', () {
+    notifier.state.resources.proofing = 1e9;
+    expect(notifier.startPaper(), isTrue);
+    expect(notifier.startPaper(), isFalse); // default single slot busy
+  });
+
+  test('completed geometry discounts the paper cost', () {
+    const balance = BalanceService();
+    final base = balance.paperCost(0);
+    notifier.state.branches['geometry'] =
+        BranchProgress(completed: true, theoremsMastered: 8);
+    notifier.state.resources.proofing = base * 0.95; // covers discount only
+    expect(notifier.startPaper(), isTrue);
+    expect(container.read(gameStateProvider).resources.proofing,
+        closeTo(base * 0.05, 1e-9));
+  });
+
+  test('completed logic & sets multiplies click power by 1.10', () {
+    notifier.state.branches['logic_sets'] =
+        BranchProgress(completed: true, theoremsMastered: 4);
+    final before = container.read(gameStateProvider).resources.counting;
+    notifier.solveExercise();
+    final after = container.read(gameStateProvider).resources.counting;
+    expect(after - before, closeTo(const BalanceService().clickPower(0) * 1.10, 1e-9));
+  });
+
+  test('focusing a subject masters it through accepted papers', () {
+    const svc = SubjectService();
+    notifier.focusSubject('logic_sets');
+    expect(container.read(gameStateProvider).activeSubjectId, 'logic_sets');
+
+    notifier.state.resources.proofing = 1e9; // rewrites always affordable
+    var guard = 0;
+    while (!svc.isCompleted(notifier.state, 'logic_sets') && guard < 200) {
+      notifier.startPaper(); // no-op while all slots are busy
+      notifier.tick(PaperConfig.writeDurationSeconds);
+      guard++;
+    }
+
+    final s = container.read(gameStateProvider);
+    expect(svc.isCompleted(s, 'logic_sets'), isTrue);
+    expect(s.activeSubjectId, isEmpty); // focus cleared at mastery
+    expect(s.stats.papersPublished, greaterThanOrEqualTo(masteryNeeded(0)));
+  });
+
+  test('resuming after an absence credits gains at half rate', () {
+    notifier.state.producerLevels['guided_exercises'] = 5;
+    final t0 = DateTime.utc(2026, 1, 1, 12);
+    final snapshot = notifier.snapshotForSave(t0);
+    final before = container.read(gameStateProvider).resources.counting;
+
+    notifier.applyAwayEarnings(snapshot, t0.add(const Duration(hours: 1)));
+
+    final expected = const ProductionSystem()
+        .compute(notifier.state)
+        .countingPerSec *
+        3600 *
+        0.5;
+    expect(container.read(gameStateProvider).resources.counting - before,
+        closeTo(expected, 1e-6));
+    expect(notifier.lastAwayReport, isNotNull);
+    notifier.dismissAwayReport();
+    expect(notifier.lastAwayReport, isNull);
   });
 }

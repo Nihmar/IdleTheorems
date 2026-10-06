@@ -25,6 +25,8 @@ class GameState {
   Map<String, double> lifetime = {'counting': 0, 'proofing': 0, 'fame': 0};
   CareerState career = CareerState();
   Map<String, BranchProgress> branches = {};
+  /// Id of the subject currently receiving theorem credit; '' = none.
+  String activeSubjectId = '';
   Map<String, int> producerLevels = {};
   Map<String, int> upgradeLevels = {};
   Set<String> techniques = {};
@@ -67,6 +69,7 @@ class GameState {
       lifetime: Map.of(lifetime),
       career: career.copy(),
       branches: branches.map((k, v) => MapEntry(k, v)),
+      activeSubjectId: activeSubjectId,
       producerLevels: Map.of(producerLevels),
       upgradeLevels: Map.of(upgradeLevels),
       techniques: List.of(techniques),
@@ -116,6 +119,7 @@ class GameState {
           thesisDefended: save.career.thesisDefended,
           apprentices: save.career.apprentices)
       ..branches = Map.of(save.branches)
+      ..activeSubjectId = save.activeSubjectId
       ..producerLevels = Map.of(save.producerLevels)
       ..upgradeLevels = Map.of(save.upgradeLevels)
       ..techniques = Set.of(save.techniques)

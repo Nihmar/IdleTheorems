@@ -53,5 +53,17 @@ void main() {
       final report = const OfflineService().compute(save, now);
       expect(report.gained.total, 0);
     });
+
+    test('cap multiplier doubles the offline window (Measure Theory)', () {
+      final s = stateWithProducer(1);
+      final save = s.toSaveData(now)
+        ..savedAt = now.subtract(const Duration(hours: 10))
+        ..lastLoadedAt = now.subtract(const Duration(hours: 11));
+
+      final base = const OfflineService().compute(save, now);
+      final doubled = const OfflineService().compute(save, now, capMultiplier: 2);
+
+      expect(doubled.secondsApplied, closeTo(base.secondsApplied * 2, 0.001));
+    });
   });
 }

@@ -65,4 +65,24 @@ void main() {
     expect(find.text('Research shop'), findsOneWidget);
     expect(find.textContaining('Guided exercises'), findsWidgets);
   });
+
+  testWidgets('away earnings show a dismissible banner on resume', (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    final notifier = container.read(gameStateProvider.notifier);
+    notifier.bootstrap(GameState()..playerName = 'Ada');
+    notifier.state.producerLevels['guided_exercises'] = 5;
+
+    await tester.pumpWidget(wrap(container));
+
+    notifier.applyAwayEarnings(
+        notifier.snapshotForSave(DateTime.now().subtract(const Duration(hours: 2))),
+        DateTime.now());
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('While you were away'), findsOneWidget);
+    await tester.tap(find.byIcon(Icons.close));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('While you were away'), findsNothing);
+  });
 }

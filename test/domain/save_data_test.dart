@@ -43,6 +43,16 @@ void main() {
       expect(restored.papersInRun, 0);
     });
 
+    test('persists the focused research subject and tolerates its absence',
+        () {
+      final t = DateTime.utc(2026, 1, 1);
+      final withFocus = SaveData.fresh(t)..activeSubjectId = 'analysis';
+      expect(SaveData.fromJson(withFocus.toJson()).activeSubjectId, 'analysis');
+
+      final legacyJson = SaveData.fresh(t).toJson()..remove('active_subject_id');
+      expect(SaveData.fromJson(legacyJson).activeSubjectId, '');
+    });
+
     test('unsupported version is rejected explicitly', () {
       final json = SaveData.fresh().toJson();
       json['version'] = 999;
