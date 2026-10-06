@@ -72,8 +72,14 @@ class ProductionSystem {
     c *= m.globalResourceMult;
     p *= m.globalResourceMult;
 
+    // Proven conjectures grant permanent boosts to their reward channels
+    // (section 4).
+    c *= s.conjectureCountingMult * s.conjectureGlobalMult;
+    p *= s.conjectureProofingMult * s.conjectureGlobalMult;
+
     // Passive citations: 0.01 F/s per published paper this run.
-    final f = 0.01 * s.papersInRun * fameMultiplier(s) * m.globalResourceMult;
+    final f =
+        0.01 * s.papersInRun * fameMultiplier(s) * m.globalResourceMult * s.conjectureGlobalMult;
 
     return ProductionRates(c, p, f);
   }
