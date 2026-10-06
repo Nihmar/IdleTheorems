@@ -105,4 +105,21 @@ void main() {
     // A fresh student cannot formulate yet.
     expect(find.text('Unlocks at Postdoc'), findsWidgets);
   });
+
+  testWidgets('stressed state offers a sabbatical in the shop', (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    final notifier = container.read(gameStateProvider.notifier);
+    notifier.bootstrap(GameState()
+      ..playerName = 'Blaise'
+      ..stress = 0.6);
+
+    await tester.pumpWidget(wrap(container));
+
+    expect(find.textContaining('Stressed'), findsOneWidget);
+    await tester.tap(find.text('Shop'));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(find.text('Sabbatical'), 200);
+    expect(find.textContaining('Sabbatical'), findsOneWidget);
+  });
 }

@@ -9,6 +9,7 @@ import 'package:idle_theorems/domain/models/subject.dart';
 import 'package:idle_theorems/domain/services/balance_service.dart';
 import 'package:idle_theorems/domain/services/subject_service.dart';
 import 'package:idle_theorems/game/systems/production_system.dart';
+import 'package:idle_theorems/game/systems/friction_system.dart';
 import 'package:idle_theorems/providers/game_state_provider.dart';
 
 void main() {
@@ -144,6 +145,29 @@ void main() {
     expect(notifier.lastAwayReport, isNotNull);
     notifier.dismissAwayReport();
     expect(notifier.lastAwayReport, isNull);
+  });
+
+  group('frictions', () {
+    test('takeSabbatical pays Fame, clears stress and posts a notice', () {
+      notifier.state.resources.gain(0, 0, 1000);
+      notifier.state.stress = 0.7;
+      expect(notifier.takeSabbatical(), isTrue);
+      final s = container.read(gameStateProvider);
+      expect(s.resources.fame, closeTo(900, 1e-9));
+      expect(s.stress, 0);
+      expect(s.transientNotice, contains('break'));
+    });
+
+    test('a fired retraction grants Metodo XP', () {
+      notifier.state.resources.gain(0, 0, 1000);
+      notifier.state.scheduledRetractions
+          .add(ScheduledRetraction(DateTime.now()));
+      notifier.tick(1);
+      final s = container.read(gameStateProvider);
+      expect(s.stats.retractions, 1);
+      expect(s.metodoXp,
+          greaterThanOrEqualTo(FrictionSystem.retractionMethodXp));
+    });
   });
 
   group('conjectures', () {
