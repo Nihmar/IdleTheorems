@@ -4,8 +4,9 @@ import 'package:flame_riverpod/flame_riverpod.dart';
 import 'package:flutter/material.dart';
 
 import '../providers/game_state_provider.dart';
+import '../ui/theme/palette.dart';
 
-/// Main game surface: the slate chalkboard background.
+/// Main game surface: the paper board background.
 ///
 /// All gameplay logic lives in systems behind [GameStateNotifier]; this class
 /// only binds the Riverpod container, forwards taps/clicks and advances the
@@ -38,16 +39,16 @@ class IdleGame extends FlameGame with RiverpodGameMixin, TapCallbacks {
     super.render(canvas);
     final w = size.x;
     final h = size.y;
-    // Dark slate board.
+    // Paper board.
     canvas.drawRect(
       Rect.fromLTWH(0, 0, w, h),
-      Paint()..color = const Color(0xFF2E4540),
+      Paint()..color = Palette.paper,
     );
     // Faint grid.
     final gridPaint = Paint()
       ..strokeWidth = 1
       ..style = PaintingStyle.stroke
-      ..color = const Color(0x14FFFFFF);
+      ..color = Palette.gridLine;
     const step = 64.0;
     for (double x = step; x < w; x += step) {
       canvas.drawLine(Offset(x, 0), Offset(x, h), gridPaint);
