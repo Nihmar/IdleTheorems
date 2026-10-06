@@ -10,6 +10,7 @@ import '../../domain/models/resources.dart';
 import '../../domain/models/subject.dart';
 import '../../domain/models/upgrade.dart';
 import '../../domain/services/balance_service.dart';
+import '../../domain/services/offline_service.dart';
 import '../../domain/services/subject_service.dart';
 import '../../game/systems/career_system.dart';
 import '../../game/systems/production_system.dart';
@@ -63,6 +64,7 @@ class MainOverlay extends ConsumerWidget {
         .compute(s, const SubjectService().modifiers(s));
     final services = const SubjectService();
     final focusDef = s.activeSubjectId.isEmpty ? null : subjectCatalog[s.activeSubjectId];
+    final lastAwayReport = ref.watch(gameStateProvider.notifier).lastAwayReport;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -135,6 +137,16 @@ class MainOverlay extends ConsumerWidget {
                                 value: s.resources.fame,
                                 perSecond: rates.famePerSec)),
                       ]),
+                      if (lastAwayReport != null) ...[
+                        const SizedBox(height: 8),
+                        _AwayBanner(
+                          report: lastAwayReport,
+                          onDismiss: () =>
+                              ref
+                                  .read(gameStateProvider.notifier)
+                                  .dismissAwayReport(),
+                        ),
+                      ],
                       if (onboardingHint(s) != null) ...[
                         const SizedBox(height: 8),
                         Container(
@@ -468,6 +480,39 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
             style: const TextStyle(
                 color: Color(0xFF9CCC65), fontSize: 12, letterSpacing: 1.2)),
       );
+}
+
+/// Transient banner listing what was earned while the app stayed in the
+/// background (plan section 13.10). Dismissed manually from the HUD.
+class _AwayBanner extends StatelessWidget {
+  const _AwayBanner({required this.report, required this.onDismiss});
+
+  final OfflineReport report;
+  final VoidCallback onDismiss;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: _gold.withValues(alpha: 0.5)),
+      ),
+      child: Row(children: [
+        const Icon(Icons.hourglass_empty, size: 16, color: _gold),
+        const SizedBox(width: 8),
+        Expanded(
+            child: Text(
+                'While you were away: +${formatNumber(report.gained.counting)} C \u00b7 +${formatNumber(report.gained.proofing)} P \u00b7 +${formatNumber(report.gained.fame)} F',
+                style:
+                    const TextStyle(color: Colors.white, fontSize: 13))),
+        IconButton(
+            onPressed: onDismiss,
+            icon: const Icon(Icons.close, size: 16, color: Colors.white70)),
+      ]),
+    );
+  }
 }
 
 /// Small pill-style tab switcher used by the research panel header.

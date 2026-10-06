@@ -9,6 +9,7 @@ import '../domain/models/resources.dart';
 import '../domain/models/save_data.dart';
 import '../domain/models/upgrade.dart';
 import '../domain/services/balance_service.dart';
+import '../domain/services/offline_service.dart';
 import '../domain/services/subject_service.dart';
 import '../game/systems/career_system.dart';
 import '../game/systems/production_system.dart';
@@ -28,6 +29,9 @@ class GameStateNotifier extends Notifier<GameState> {
   final Random _rng = Random();
 
   VoidCallback? _saveHook;
+
+  /// Transient report fed to the HUD "while you were away" banner.
+  OfflineReport? lastAwayReport;
 
   @override
   GameState build() => GameState();
@@ -56,6 +60,27 @@ class GameStateNotifier extends Notifier<GameState> {
 
   /// Public accessor for the persistence wiring in main().
   SaveData snapshotForSave([DateTime? now]) => state.toSaveData(now);
+
+  /// Credits the gap between [awaySince] and [now] at offline rates
+  /// (plan section 13.10): half speed, capped window (doubled by Measure
+  /// Theory once completed). Called when the app returns to the foreground;
+  /// [frozenSnapshot] is the state as saved at the moment of leaving.
+  void applyAwayEarnings(SaveData frozenSnapshot, DateTime now) {
+    final report = const OfflineService().compute(
+        frozenSnapshot,
+        now,
+        capMultiplier: _subjects.modifiers(state).offlineCapMult);
+    if (report.secondsApplied <= 0 || report.gained.total <= 0) return;
+    state.gain(report.gained.counting, report.gained.proofing, report.gained.fame);
+    if (report.secondsApplied >= 1) lastAwayReport = report;
+    _refresh();
+  }
+
+  void dismissAwayReport() {
+    if (lastAwayReport == null) return;
+    lastAwayReport = null;
+    _refresh();
+  }
 
   // ---------------------------------------------------------------- actions
 

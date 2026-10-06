@@ -37,13 +37,6 @@ Do not use raw HTTPS calls or the web UI; prefer `gh` commands.
   background, dark-but-not-pure-black text, gold accent highlights.
   Replaces the current dark chalkboard look once the core loop stabilizes.
 
-## Pending features
-
-- **Away-time earnings:** game must keep progressing while backgrounded or
-  closed. Startup offline gains exist; still missing: credit the paused→
-  resumed gap (persist timestamp on pause, apply elapsed time at offline
-  rate on resume, show a "while you were away" banner).
-
 ## Code quality
 
 - Follow `analysis_options.yaml`; no dead code, no unresolved TODOs.

@@ -6,6 +6,7 @@ import 'package:idle_theorems/domain/models/save_data.dart';
 import 'package:idle_theorems/domain/models/subject.dart';
 import 'package:idle_theorems/domain/services/balance_service.dart';
 import 'package:idle_theorems/domain/services/subject_service.dart';
+import 'package:idle_theorems/game/systems/production_system.dart';
 import 'package:idle_theorems/providers/game_state_provider.dart';
 
 void main() {
@@ -121,5 +122,25 @@ void main() {
     expect(svc.isCompleted(s, 'logic_sets'), isTrue);
     expect(s.activeSubjectId, isEmpty); // focus cleared at mastery
     expect(s.stats.papersPublished, greaterThanOrEqualTo(masteryNeeded(0)));
+  });
+
+  test('resuming after an absence credits gains at half rate', () {
+    notifier.state.producerLevels['guided_exercises'] = 5;
+    final t0 = DateTime.utc(2026, 1, 1, 12);
+    final snapshot = notifier.snapshotForSave(t0);
+    final before = container.read(gameStateProvider).resources.counting;
+
+    notifier.applyAwayEarnings(snapshot, t0.add(const Duration(hours: 1)));
+
+    final expected = const ProductionSystem()
+        .compute(notifier.state)
+        .countingPerSec *
+        3600 *
+        0.5;
+    expect(container.read(gameStateProvider).resources.counting - before,
+        closeTo(expected, 1e-6));
+    expect(notifier.lastAwayReport, isNotNull);
+    notifier.dismissAwayReport();
+    expect(notifier.lastAwayReport, isNull);
   });
 }
