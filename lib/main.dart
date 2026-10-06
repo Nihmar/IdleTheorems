@@ -1,121 +1,131 @@
-import 'package:flutter/material.dart';
+import 'dart:async';
 
-void main() {
-  runApp(const MyApp());
+import 'package:flame/game.dart';
+import 'package:flame_riverpod/flame_riverpod.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'domain/models/resources.dart';
+import 'domain/models/game_state.dart';
+import 'domain/services/offline_service.dart';
+import 'domain/services/save_service.dart';
+import 'game/idle_game.dart';
+import 'providers/game_state_provider.dart';
+import 'ui/overlays/main_overlay.dart';
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  final container = ProviderContainer();
+
+  // Persistence first: load save, apply offline earnings, wire saves back.
+  final saveService = SaveService();
+  await saveService.init();
+
+  GameState state = GameState();
+  Resources? offlineGains;
+  try {
+    final loaded = await saveService.load();
+    if (loaded != null) {
+      state = GameState.fromSave(loaded);
+      final report = const OfflineService().compute(loaded, DateTime.now());
+      offlineGains = report.gained;
+    }
+  } catch (e) {
+    // Corrupt save: start fresh instead of bricking the app.
+    debugPrint('Failed to load save, starting fresh: $e');
+    state = GameState();
+  }
+
+  final notifier = container.read(gameStateProvider.notifier);
+  notifier.bootstrap(state, offlineGains: offlineGains);
+  notifier.setSaveHook(() => saveService.save(notifier.snapshotForSave()));
+
+  runApp(
+    UncontrolledProviderScope(
+      container: container,
+      child: IdleTheoremsApp(
+        saveNow: () => saveService.save(
+            container.read(gameStateProvider.notifier).snapshotForSave()),
+      ),
+    ),
+  );
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class IdleTheoremsApp extends StatelessWidget {
+  const IdleTheoremsApp({required this.saveNow, super.key});
 
-  // This widget is the root of your application.
+  /// Persists the current state (used by autosave + lifecycle hooks).
+  final Future<void> Function() saveNow;
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      title: 'Idle Theorems',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData.dark(useMaterial3: true),
+      home: GameScreen(saveNow: saveNow),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+/// Hosts the Flame surface plus Flutter overlays, and owns the persistence
+/// timers: autosave every 60s while foreground, immediate save on pause
+/// (plan section 14.5). Never per frame.
+class GameScreen extends StatefulWidget {
+  const GameScreen({required this.saveNow, super.key});
 
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+  final Future<void> Function() saveNow;
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<GameScreen> createState() => _GameScreenState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _GameScreenState extends State<GameScreen> with WidgetsBindingObserver {
+  late final Timer _autosave;
+  late final GlobalKey<RiverpodAwareGameWidgetState<IdleGame>> _gameKey;
+  late final IdleGame _game;
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+  @override
+  void initState() {
+    super.initState();
+    _gameKey = GlobalKey<RiverpodAwareGameWidgetState<IdleGame>>();
+    _game = IdleGame();
+    _autosave = Timer.periodic(const Duration(seconds: 60), (_) {
+      widget.saveNow();
     });
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _autosave.cancel();
+    widget.saveNow();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    switch (state) {
+      case AppLifecycleState.paused:
+      case AppLifecycleState.hidden:
+        widget.saveNow();
+      default:
+        break;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: .center,
-          children: [
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
+      body: RiverpodAwareGameWidget<IdleGame>(
+        game: _game,
+        key: _gameKey,
+        initialActiveOverlays: const ['main'],
+        overlayBuilderMap: <String, OverlayWidgetBuilder<IdleGame>>{
+          'main': (context, game) => const MainOverlay(),
+        },
       ),
     );
   }
