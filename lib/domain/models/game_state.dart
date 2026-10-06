@@ -31,6 +31,10 @@ class GameState {
   Map<String, int> upgradeLevels = {};
   Set<String> techniques = {};
   List<ConjectureState> conjectures = [];
+  /// Permanent production multipliers granted by PROVEN conjectures (§4).
+  double conjectureCountingMult = 1;
+  double conjectureProofingMult = 1;
+  double conjectureGlobalMult = 1;
   PrestigeState prestige = PrestigeState();
   TrendState trend = TrendState();
   int metodoLevel = 1;
@@ -74,6 +78,9 @@ class GameState {
       upgradeLevels: Map.of(upgradeLevels),
       techniques: List.of(techniques),
       conjectures: List.of(conjectures),
+      conjCountMult: conjectureCountingMult,
+      conjProofMult: conjectureProofingMult,
+      conjGlobalMult: conjectureGlobalMult,
       prestige: PrestigeState(
         legacy: prestige.legacy,
         prestigesCount: prestige.prestigesCount,
@@ -124,6 +131,9 @@ class GameState {
       ..upgradeLevels = Map.of(save.upgradeLevels)
       ..techniques = Set.of(save.techniques)
       ..conjectures = List.of(save.conjectures)
+      ..conjectureCountingMult = save.conjCountMult
+      ..conjectureProofingMult = save.conjProofMult
+      ..conjectureGlobalMult = save.conjGlobalMult
       ..prestige = PrestigeState(
           legacy: save.prestige.legacy,
           prestigesCount: save.prestige.prestigesCount,

@@ -153,6 +153,11 @@ class SaveData {
   /// Owned technique ids (addition vs doc draft).
   List<String> techniques;
   List<ConjectureState> conjectures;
+  /// Persistent production multipliers from proven conjectures (§4).
+  /// Additive fields, default 1.
+  double conjCountMult;
+  double conjProofMult;
+  double conjGlobalMult;
   PrestigeState prestige;
   TrendState trend;
   int metodoLevel;
@@ -177,6 +182,9 @@ class SaveData {
     required this.upgradeLevels,
     required this.techniques,
     required this.conjectures,
+    this.conjCountMult = 1,
+    this.conjProofMult = 1,
+    this.conjGlobalMult = 1,
     required this.prestige,
     required this.trend,
     required this.metodoLevel,
@@ -232,6 +240,9 @@ class SaveData {
         'upgrade_levels': upgradeLevels,
         'techniques': techniques,
         'conjectures': conjectures.map((c) => c.toJson()).toList(),
+        'conj_count_mult': conjCountMult,
+        'conj_proof_mult': conjProofMult,
+        'conj_global_mult': conjGlobalMult,
         'prestige': prestige.toJson(),
         'trend': trend.toJson(),
         'metodo_level': metodoLevel,
@@ -271,6 +282,9 @@ class SaveData {
       conjectures: (raw['conjectures'] as List<dynamic>? ?? [])
           .map((e) => ConjectureState.fromJson(e as Map<String, dynamic>))
           .toList(),
+      conjCountMult: (raw['conj_count_mult'] as num?)?.toDouble() ?? 1,
+      conjProofMult: (raw['conj_proof_mult'] as num?)?.toDouble() ?? 1,
+      conjGlobalMult: (raw['conj_global_mult'] as num?)?.toDouble() ?? 1,
       prestige: PrestigeState.fromJson(raw['prestige'] as Map<String, dynamic>),
       trend: TrendState.fromJson(raw['trend'] as Map<String, dynamic>),
       metodoLevel: raw['metodo_level'] as int? ?? 1,

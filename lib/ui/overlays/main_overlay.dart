@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:katex/katex.dart';
 
+import '../../domain/models/career.dart';
+import '../../domain/models/conjecture.dart';
 import '../../domain/models/game_state.dart';
 import '../../domain/models/producers.dart';
 import '../../domain/models/resources.dart';
@@ -13,6 +15,7 @@ import '../../domain/services/balance_service.dart';
 import '../../domain/services/offline_service.dart';
 import '../../domain/services/subject_service.dart';
 import '../../game/systems/career_system.dart';
+import '../../game/systems/conjecture_system.dart';
 import '../../game/systems/production_system.dart';
 import '../../providers/game_state_provider.dart';
 import '../../utils/number_format.dart';
@@ -225,7 +228,7 @@ class _BottomBar extends ConsumerStatefulWidget {
 
 class _BottomBarState extends ConsumerState<_BottomBar> {
   bool _shopOpen = false;
-  String _tab = 'shop'; // 'shop' | 'subjects'
+  String _tab = 'shop'; // 'shop' | 'subjects' | 'conjectures'
 
   @override
   Widget build(BuildContext context) {
@@ -254,7 +257,11 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
                     children: [
                       Row(children: [
-                        Text(_tab == 'shop' ? 'Research shop' : 'Subject tree',
+                        Text(_tab == 'shop'
+                            ? 'Research shop'
+                            : _tab == 'subjects'
+                                ? 'Subject tree'
+                                : 'Conjectures',
                             style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 18,
@@ -270,6 +277,12 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
                           label: 'Subjects',
                           selected: _tab == 'subjects',
                           onTap: () => setState(() => _tab = 'subjects'),
+                        ),
+                        const SizedBox(width: 6),
+                        _TabButton(
+                          label: 'Conjectures',
+                          selected: _tab == 'conjectures',
+                          onTap: () => setState(() => _tab = 'conjectures'),
                         ),
                         IconButton(
                             onPressed: () => setState(() => _shopOpen = false),
@@ -307,6 +320,17 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
                             canAfford: s.resources.canAfford(0, CareerSystem.thesisCostProofing),
                             onBuy: () => ref.read(gameStateProvider.notifier).defendThesis(),
                           ),
+                      ] else if (_tab == 'conjectures') ...[
+                        _sectionHeader('Discovery'),
+                        const Padding(
+                          padding: EdgeInsets.only(bottom: 8),
+                          child: Text(
+                              'Formulate in completed fields, fund work sessions, roll at 100%. Failing teaches Metodo — and half the progress survives. Max 2 active discoveries.',
+                              style:
+                                  TextStyle(color: Colors.white70, fontSize: 12, height: 1.5)),
+                        ),
+                        for (final def in conjecturesByTier())
+                          _conjectureRow(def),
                       ] else ...[
                         _sectionHeader('Your fields of study'),
                         const Padding(
@@ -472,6 +496,165 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
         ),
       ),
     );
+  }
+
+  Widget _conjectureRow(ConjectureDef def) {
+    final s = ref.watch(gameStateProvider);
+    final svc = ConjectureSystem();
+    final st = svc.stateOf(s, def.id);
+    final missing = svc.missingSubjects(s, def.id);
+    final careerLocked = s.career.stage.index < CareerStage.postdoc.index;
+    final proven = st?.status == ConjectureStatus.proven;
+    final cooling = st?.status == ConjectureStatus.refuted;
+    final active = st?.status == ConjectureStatus.active;
+
+    late final String statusText;
+    late final Color statusColor;
+    if (proven) {
+      statusText = 'Proven · ${def.rewardSummary}';
+      statusColor = _gold;
+    } else if (cooling) {
+      statusText =
+          'Refuted · retry in ${_fmtCooldown(st!.readyAt!)} (${st.progress.toStringAsFixed(0)}% kept)';
+      statusColor = Colors.white70;
+    } else if (active) {
+      statusText = '${st!.progress.toStringAsFixed(0)}% done';
+      statusColor = _gold;
+    } else if (careerLocked) {
+      statusText = 'Unlocks at Postdoc';
+      statusColor = Colors.white38;
+    } else if (missing.isNotEmpty) {
+      statusText = 'Needs: ${missing.map((id) => subjectCatalog[id]?.name ?? id).join(', ')}';
+      statusColor = Colors.white38;
+    } else {
+      statusText = '';
+      statusColor = Colors.white70;
+    }
+
+    final branches = def.subjects
+        .map((id) => subjectCatalog[id]?.name ?? id)
+        .join(', ');
+    final subLine = [
+      'Tier ${def.tier}${def.isEndgame ? ' · open problem' : ''}',
+      branches,
+      'Reward: ${def.rewardSummary}',
+    ].join('  ·  ');
+
+    final canStart = !proven && !cooling && !active && svc.canFormulate(s, def.id);
+    final slotsFree = svc.slotsAvailable(s, def.id);
+    final formCost =
+        _costLabel(def.formulation.counting, def.formulation.proofing, def.formulation.fame);
+    final workCost =
+        _costLabel(def.workPerSession.counting, def.workPerSession.proofing, def.workPerSession.fame);
+    final n = ref.read(gameStateProvider.notifier);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: proven ? 0.45 : 0.3),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+            color: proven
+                ? _gold.withValues(alpha: 0.8)
+                : Colors.white.withValues(alpha: 0.12)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        child: Column(children: [
+          Row(children: [
+            Icon(proven
+                    ? Icons.verified
+                    : cooling
+                        ? Icons.hourglass_bottom
+                        : active
+                            ? Icons.edit_note
+                            : Icons.science_outlined,
+                size: 20,
+                color: statusColor),
+            const SizedBox(width: 10),
+            Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(def.name,
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600)),
+              const SizedBox(height: 2),
+              Text(subLine,
+                  style: const TextStyle(color: Colors.white54, fontSize: 12)),
+            ])),
+            Flexible(
+                child: Text(statusText,
+                    textAlign: TextAlign.right,
+                    style: TextStyle(color: statusColor, fontSize: 12))),
+          ]),
+          if (active && st != null) ...[
+            const SizedBox(height: 8),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                  value: st.progress / 100,
+                  minHeight: 6,
+                  backgroundColor: Colors.white.withValues(alpha: 0.1),
+                  valueColor:
+                      const AlwaysStoppedAnimation<Color>(Color(0xFF9CCC65))),
+            ),
+            const SizedBox(height: 8),
+            Align(
+                alignment: Alignment.centerRight,
+                child: OutlinedButton.icon(
+                    onPressed: s.resources.canAfford(
+                            def.workPerSession.counting,
+                            def.workPerSession.proofing,
+                            def.workPerSession.fame)
+                        ? () => n.workOnConjecture(def.id)
+                        : null,
+                    style: OutlinedButton.styleFrom(
+                        minimumSize: const Size(0, 34),
+                        foregroundColor: Colors.white),
+                    icon: const Icon(Icons.play_arrow, size: 18),
+                    label: Text('Work session ($workCost)'))),
+          ],
+          if (canStart) ...[
+            const SizedBox(height: 8),
+            Align(
+                alignment: Alignment.centerRight,
+                child: FilledButton.icon(
+                    onPressed: slotsFree &&
+                            s.resources.canAfford(
+                                def.formulation.counting,
+                                def.formulation.proofing,
+                                def.formulation.fame)
+                        ? () => n.formulateConjecture(def.id)
+                        : null,
+                    style: FilledButton.styleFrom(
+                        backgroundColor: const Color(0xFF9CCC65),
+                        foregroundColor: Colors.black,
+                        minimumSize: const Size(0, 34)),
+                    icon: const Icon(Icons.add_circle_outline, size: 18),
+                    label: Text(slotsFree ? 'Formulate ($formCost)' : 'Slots full'))),
+          ],
+        ]),
+      ),
+    );
+  }
+
+  String _costLabel(double c, double p, double f) {
+    final parts = <String>[
+      if (c > 0) '${formatNumber(c)} C',
+      if (p > 0) '${formatNumber(p)} P',
+      if (f > 0) '${formatNumber(f)} F',
+    ];
+    return parts.isEmpty ? '—' : parts.join(' + ');
+  }
+
+  String _fmtCooldown(DateTime readyAt) {
+    final d = readyAt.difference(DateTime.now());
+    if (d.isNegative) return '0s';
+    final h = d.inHours;
+    final m = d.inMinutes % 60;
+    if (h > 0) return '$h h ${m.toString().padLeft(2, '0')} min';
+    return '${d.inMinutes} min';
   }
 
   Widget _sectionHeader(String title) => Padding(

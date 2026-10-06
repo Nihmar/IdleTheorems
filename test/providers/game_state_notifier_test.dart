@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:idle_theorems/domain/models/career.dart';
+import 'package:idle_theorems/domain/models/conjecture.dart';
 import 'package:idle_theorems/domain/models/game_state.dart';
 import 'package:idle_theorems/domain/models/producers.dart';
 import 'package:idle_theorems/domain/models/save_data.dart';
@@ -142,5 +144,47 @@ void main() {
     expect(notifier.lastAwayReport, isNotNull);
     notifier.dismissAwayReport();
     expect(notifier.lastAwayReport, isNull);
+  });
+
+  group('conjectures', () {
+    late GameState postdoc;
+
+    setUp(() {
+      postdoc = GameState()
+        ..career.stage = CareerStage.postdoc
+        ..branches = {'discrete_algebra': BranchProgress(completed: true)}
+        ..resources.gain(1e12, 1e12, 1e12);
+      notifier.bootstrap(postdoc);
+    });
+
+    test('formulateConjecture pays once and opens the discovery loop', () {
+      expect(notifier.formulateConjecture('double_counting_lemmas'), isTrue);
+      final s = container.read(gameStateProvider);
+      expect(s.conjectures.single.defId, 'double_counting_lemmas');
+      expect(s.conjectures.single.status, ConjectureStatus.active);
+      expect(notifier.formulateConjecture('double_counting_lemmas'), isFalse);
+    });
+
+    test('workOnConjecture eventually resolves and rewards or teaches', () {
+      notifier.formulateConjecture('double_counting_lemmas');
+      // Bounded loop: tier 1 needs ~8 sessions; rolls resolve within that.
+      for (var i = 0; i < 30; i++) {
+        notifier.workOnConjecture('double_counting_lemmas');
+        final st = container.read(gameStateProvider).conjectures.single;
+        if (st.status == ConjectureStatus.proven) break;
+        if (st.status == ConjectureStatus.refuted) {
+          // Failure must have granted Metodo XP (10 x tier).
+          expect(container.read(gameStateProvider).metodoXp,
+              greaterThanOrEqualTo(10));
+          // Jump past the cooldown and keep working until proven.
+          st.readyAt = DateTime.now();
+          notifier.tick(0.001);
+        }
+      }
+      expect(
+          container.read(gameStateProvider).conjectures.single.status,
+          ConjectureStatus.proven);
+      expect(container.read(gameStateProvider).stats.conjecturesSolved, 1);
+    });
   });
 }

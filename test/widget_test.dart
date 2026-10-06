@@ -85,4 +85,24 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.textContaining('While you were away'), findsNothing);
   });
+
+  testWidgets('conjectures tab lists discoveries with their gates', (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    container
+        .read(gameStateProvider.notifier)
+        .bootstrap(GameState()..playerName = 'Blaise');
+
+    await tester.pumpWidget(wrap(container));
+
+    await tester.tap(find.text('Shop'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Conjectures'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('DISCOVERY'), findsOneWidget);
+    expect(find.text('Double Counting Lemmas'), findsOneWidget);
+    // A fresh student cannot formulate yet.
+    expect(find.text('Unlocks at Postdoc'), findsWidgets);
+  });
 }
