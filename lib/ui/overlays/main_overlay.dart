@@ -14,6 +14,7 @@ import '../../domain/models/upgrade.dart';
 import '../../domain/services/balance_service.dart';
 import '../../domain/services/offline_service.dart';
 import '../../domain/services/subject_service.dart';
+import '../../game/systems/apprentice_service.dart';
 import '../../game/systems/career_system.dart';
 import '../../game/systems/conjecture_system.dart';
 import '../../game/systems/friction_system.dart';
@@ -428,6 +429,8 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
                         _sectionHeader('Upgrades'),
                         for (final u in upgradeCatalogList)
                           _upgradeRow(u, mods.upgradeCostFactor),
+                        _sectionHeader('Laboratory'),
+                        _laboratoryRow(s),
                         _sectionHeader('Publication desk'),
                         _paperDeskRow(balance, mods.paperCostFactor, maxSlots, papersInProgress),
                         if (CareerSystem().canDefendThesis(s))
@@ -780,6 +783,43 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
           ],
         ]),
       ),
+    );
+  }
+
+  /// The next laboratory recruit (sections 5, 13.8): professors may hire
+  /// students who grind Counting automatically.
+  Widget _laboratoryRow(GameState s) {
+    final svc = const ApprenticeService();
+    final owned = s.career.apprentices;
+    if (s.career.stage != CareerStage.professor) {
+      return ShopCard(
+        name: 'Your laboratory',
+        description:
+            'As a Professor you may recruit students who grind Counting automatically.',
+        costLabel: 'Unlocks at Professor',
+        canAfford: false,
+        onBuy: () {},
+      );
+    }
+    final next = svc.nextHire(owned);
+    if (next == null) {
+      return ShopCard(
+        name: 'A full laboratory',
+        description:
+            'Five researchers under your name: +${svc.outputOf(owned).toStringAsFixed(0)} Counting/s.',
+        costLabel: 'Complete',
+        canAfford: false,
+        onBuy: () {},
+      );
+    }
+    return ShopCard(
+      name: 'Recruit ${next.name}',
+      description:
+          '${next.bio} Adds +${next.countingPerSec.toStringAsFixed(0)} Counting/s.',
+      costLabel: _costLabel(next.costCounting, next.costProofing, next.costFame),
+      canAfford: s.resources.canAfford(
+          next.costCounting, next.costProofing, next.costFame),
+      onBuy: () => ref.read(gameStateProvider.notifier).hireApprentice(),
     );
   }
 
