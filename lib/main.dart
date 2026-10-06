@@ -9,6 +9,7 @@ import 'domain/models/resources.dart';
 import 'domain/models/game_state.dart';
 import 'domain/services/offline_service.dart';
 import 'domain/services/save_service.dart';
+import 'domain/services/subject_service.dart';
 import 'game/idle_game.dart';
 import 'providers/game_state_provider.dart';
 import 'ui/overlays/main_overlay.dart';
@@ -28,7 +29,13 @@ Future<void> main() async {
     final loaded = await saveService.load();
     if (loaded != null) {
       state = GameState.fromSave(loaded);
-      final report = const OfflineService().compute(loaded, DateTime.now());
+      final mods = const SubjectService().modifiers(state);
+      final report = const OfflineService().compute(
+        loaded,
+        DateTime.now(),
+        capMultiplier: mods.offlineCapMult,
+        mods: mods,
+      );
       offlineGains = report.gained;
     }
   } catch (e) {

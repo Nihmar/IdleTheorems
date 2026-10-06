@@ -1,10 +1,9 @@
-import 'dart:math';
-
 import '../../game/systems/production_system.dart';
 import '../models/game_state.dart';
 import '../models/resources.dart';
 import '../models/save_data.dart';
 import 'balance_service.dart';
+import 'subject_service.dart';
 
 class OfflineReport {
   final double secondsApplied;
@@ -22,16 +21,20 @@ class OfflineService {
 
   final ProductionSystem _production;
 
-  OfflineReport compute(SaveData save, DateTime now) {
+  /// [capMultiplier] extends the default window (Measure Theory x2); [mods]
+  /// carries completed-subject effects into the rate computation.
+  OfflineReport compute(SaveData save, DateTime now,
+      {double capMultiplier = 1, SubjectModifiers? mods}) {
     var elapsedMs = now.difference(save.savedAt).inMilliseconds;
     // Clock rolled backwards since last load -> no offline earnings.
     if (save.savedAt.isBefore(save.lastLoadedAt)) elapsedMs = 0;
     if (elapsedMs < 0) elapsedMs = 0;
 
-    final capMs = BalanceService.offlineCapDefault.inMilliseconds;
-    final appliedSeconds = min(elapsedMs, capMs) / 1000 * BalanceService.offlineEfficiency;
+    final capMs = BalanceService.offlineCapDefault.inMilliseconds * capMultiplier;
+    final cappedMs = elapsedMs < capMs ? elapsedMs : capMs;
+    final appliedSeconds = cappedMs / 1000 * BalanceService.offlineEfficiency;
 
-    final rates = _production.compute(GameState.fromSave(save));
+    final rates = _production.compute(GameState.fromSave(save), mods);
     return OfflineReport(
       appliedSeconds,
       Resources(
