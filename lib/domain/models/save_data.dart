@@ -22,14 +22,24 @@ class BranchProgress {
 
 class PrestigeState {
   int legacy = 0;
+  /// Lifetime total earned: drives the permanent +2%/point bonus even
+  /// after points are spent on mathematicians.
+  int legacyAllTime = 0;
   int prestigesCount = 0;
   List<String> mathematicians = [];
 
-  PrestigeState({this.legacy = 0, this.prestigesCount = 0, List<String>? mathematicians})
+  PrestigeState(
+      {this.legacy = 0,
+      this.legacyAllTime = 0,
+      this.prestigesCount = 0,
+      List<String>? mathematicians})
       : mathematicians = mathematicians ?? [];
 
   factory PrestigeState.fromJson(Map<String, dynamic> json) => PrestigeState(
         legacy: json['legacy'] as int,
+        // Old saves predate the split: treat the bank as the all-time total.
+        legacyAllTime:
+            (json['legacy_all_time'] as int?) ?? (json['legacy'] as int),
         prestigesCount: json['prestiges_count'] as int,
         mathematicians: (json['mathematicians'] as List<dynamic>)
             .map((e) => e as String)
@@ -38,6 +48,7 @@ class PrestigeState {
 
   Map<String, dynamic> toJson() => {
         'legacy': legacy,
+        'legacy_all_time': legacyAllTime,
         'prestiges_count': prestigesCount,
         'mathematicians': mathematicians,
       };

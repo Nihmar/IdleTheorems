@@ -94,6 +94,7 @@ class GameState {
       scheduledRetractions: List.of(scheduledRetractions),
       prestige: PrestigeState(
         legacy: prestige.legacy,
+        legacyAllTime: prestige.legacyAllTime,
         prestigesCount: prestige.prestigesCount,
         mathematicians: List.of(prestige.mathematicians),
       ),
@@ -150,6 +151,7 @@ class GameState {
       ..scheduledRetractions = List.of(save.scheduledRetractions)
       ..prestige = PrestigeState(
           legacy: save.prestige.legacy,
+          legacyAllTime: save.prestige.legacyAllTime,
           prestigesCount: save.prestige.prestigesCount,
           mathematicians: List.of(save.prestige.mathematicians))
       ..trend = TrendState(
