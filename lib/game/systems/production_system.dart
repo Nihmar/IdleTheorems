@@ -1,6 +1,7 @@
 import '../../domain/models/game_state.dart';
 import '../../domain/models/producers.dart';
 import '../../domain/services/subject_service.dart';
+import 'friction_system.dart';
 
 /// Per-second production rates derived from the current state.
 class ProductionRates {
@@ -77,9 +78,18 @@ class ProductionSystem {
     c *= s.conjectureCountingMult * s.conjectureGlobalMult;
     p *= s.conjectureProofingMult * s.conjectureGlobalMult;
 
+    // Burnout halves every channel while active (section 13.10).
+    final burnMult = const FrictionSystem().productionMultiplier(s);
+    c *= burnMult;
+    p *= burnMult;
+
     // Passive citations: 0.01 F/s per published paper this run.
-    final f =
-        0.01 * s.papersInRun * fameMultiplier(s) * m.globalResourceMult * s.conjectureGlobalMult;
+    final f = 0.01 *
+        s.papersInRun *
+        fameMultiplier(s) *
+        m.globalResourceMult *
+        s.conjectureGlobalMult *
+        burnMult;
 
     return ProductionRates(c, p, f);
   }
