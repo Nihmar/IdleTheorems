@@ -140,6 +140,8 @@ class MainOverlay extends ConsumerWidget {
                               const SizedBox(width: 8),
                               _Chip(label: 'Metodo Lv ${s.metodoLevel}',
                                   icon: Icons.psychology_alt),
+                              for (final title in s.titles)
+                                _Chip(label: title, icon: Icons.emoji_events),
                               if (focusDef != null) ...[
                                 const SizedBox(width: 8),
                                 _Chip(
@@ -456,7 +458,17 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
                               style:
                                   TextStyle(color: Palette.inkSoft, fontSize: 12, height: 1.5)),
                         ),
-                        for (final def in conjecturesByTier())
+                        for (final def in conjecturesByTier().where((d) => !d.isEndgame))
+                          _conjectureRow(def),
+                        _sectionHeader('Frontiers'),
+                        const Padding(
+                          padding: EdgeInsets.only(bottom: 8),
+                          child: Text(
+                              'The great open problems. Sealed until you reach Professor — then they wait forever.',
+                              style:
+                                  TextStyle(color: Palette.inkSoft, fontSize: 12, height: 1.5)),
+                        ),
+                        for (final def in conjecturesByTier().where((d) => d.isEndgame))
                           _conjectureRow(def),
                       ] else ...[
                         _sectionHeader('Your fields of study'),
@@ -630,7 +642,9 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
     final svc = ConjectureSystem();
     final st = svc.stateOf(s, def.id);
     final missing = svc.missingSubjects(s, def.id);
-    final careerLocked = s.career.stage.index < CareerStage.postdoc.index;
+    final endgameLocked = svc.endgameLocked(s, def);
+    final careerLocked =
+        !endgameLocked && s.career.stage.index < CareerStage.postdoc.index;
     final proven = st?.status == ConjectureStatus.proven;
     final cooling = st?.status == ConjectureStatus.refuted;
     final active = st?.status == ConjectureStatus.active;
@@ -647,6 +661,9 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
     } else if (active) {
       statusText = '${st!.progress.toStringAsFixed(0)}% done';
       statusColor = Palette.accent;
+    } else if (endgameLocked) {
+      statusText = 'Unlocks at Professor';
+      statusColor = Palette.inkFaint;
     } else if (careerLocked) {
       statusText = 'Unlocks at Postdoc';
       statusColor = Palette.inkFaint;
@@ -678,7 +695,7 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: proven ? 0.45 : 0.3),
+        color: proven ? Palette.surfaceAlt : Palette.surface,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
             color: proven
