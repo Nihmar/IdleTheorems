@@ -148,6 +148,46 @@ void main() {
     expect(find.textContaining('Sabbatical'), findsOneWidget);
   });
 
+  Future<void> scrollToLaboratory(WidgetTester tester) async {
+    await tester.tap(find.text('Shop'));
+    await tester.pumpAndSettle();
+    // The laboratory sits mid-list in the lazy shop.
+    for (var i = 0;
+        i < 10 && find.text('LABORATORY').evaluate().isEmpty;
+        i++) {
+      await tester.dragFrom(const Offset(400, 500), const Offset(0, -400));
+      await tester.pumpAndSettle();
+    }
+  }
+
+  testWidgets('laboratory stays sealed below Professor', (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    container
+        .read(gameStateProvider.notifier)
+        .bootstrap(GameState()..playerName = 'Blaise');
+
+    await tester.pumpWidget(wrap(container));
+    await scrollToLaboratory(tester);
+
+    expect(find.text('LABORATORY'), findsOneWidget);
+    expect(find.text('Unlocks at Professor'), findsOneWidget);
+  });
+
+  testWidgets('professors see their next laboratory recruit', (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    container.read(gameStateProvider.notifier).bootstrap(
+        GameState()
+          ..playerName = 'Blaise'
+          ..career.stage = CareerStage.professor);
+
+    await tester.pumpWidget(wrap(container));
+    await scrollToLaboratory(tester);
+
+    expect(find.textContaining('Recruit María'), findsOneWidget);
+  });
+
   testWidgets('prestige reboots the run through the confirmation dialog',
       (tester) async {
     final container = ProviderContainer();

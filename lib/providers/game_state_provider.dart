@@ -11,6 +11,7 @@ import '../domain/models/upgrade.dart';
 import '../domain/services/balance_service.dart';
 import '../domain/services/offline_service.dart';
 import '../domain/services/subject_service.dart';
+import '../game/systems/apprentice_service.dart';
 import '../game/systems/career_system.dart';
 import '../game/systems/conjecture_system.dart';
 import '../game/systems/friction_system.dart';
@@ -32,6 +33,7 @@ class GameStateNotifier extends Notifier<GameState> {
   final SubjectService _subjects = const SubjectService();
   final ConjectureSystem _conjectures = ConjectureSystem();
   final FrictionSystem _friction = const FrictionSystem();
+  final ApprenticeService _apprentices = const ApprenticeService();
   final TrendService _trend = const TrendService();
   final PrestigeService _prestige = const PrestigeService();
   final Random _rng = Random();
@@ -172,6 +174,16 @@ class GameStateNotifier extends Notifier<GameState> {
   bool takeSabbatical() {
     if (!_friction.takeSabbatical(state)) return false;
     _notice('A well-earned break. Stress cleared.');
+    _afterMutation();
+    return true;
+  }
+
+  /// Recruit the next apprentice into the laboratory (sections 5, 13.8).
+  bool hireApprentice() {
+    final def = _apprentices.hire(state);
+    if (def == null) return false;
+    _notice(
+        '${def.name} joins your laboratory (+${def.countingPerSec.toStringAsFixed(0)} Counting/s).');
     _afterMutation();
     return true;
   }
