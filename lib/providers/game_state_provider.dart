@@ -14,6 +14,7 @@ import '../domain/services/subject_service.dart';
 import '../game/systems/career_system.dart';
 import '../game/systems/conjecture_system.dart';
 import '../game/systems/friction_system.dart';
+import '../game/systems/prestige_service.dart';
 import '../game/systems/trend_service.dart';
 import '../game/systems/production_system.dart';
 import '../game/systems/review_service.dart';
@@ -32,6 +33,7 @@ class GameStateNotifier extends Notifier<GameState> {
   final ConjectureSystem _conjectures = ConjectureSystem();
   final FrictionSystem _friction = const FrictionSystem();
   final TrendService _trend = const TrendService();
+  final PrestigeService _prestige = const PrestigeService();
   final Random _rng = Random();
 
   VoidCallback? _saveHook;
@@ -174,6 +176,29 @@ class GameStateNotifier extends Notifier<GameState> {
     return true;
   }
 
+  // ------------------------------------------------------------ prestige
+
+  int get legacyGainNow => _prestige.legacyGain(state);
+
+  /// Reboots the run into Legacy points (sections 6 and 13.9).
+  bool prestige() {
+    if (!_prestige.canPrestige(state)) return false;
+    final gain = _prestige.legacyGain(state);
+    _prestige.applyPrestige(state);
+    _notice('+$gain Eredità — a new chapter begins.');
+    _afterMutation();
+    return true;
+  }
+
+  /// Hires a historical mathematician with Legacy points.
+  bool hireMathematician(String id) {
+    final def = mathematicianById(id);
+    if (def == null || !_prestige.hireMathematician(state, id)) return false;
+    _notice(def.lore);
+    _afterMutation();
+    return true;
+  }
+
   // ---------------------------------------------------------- conjectures
 
   /// Pays the one-time formulation cost (postdoc gate, §5).
@@ -192,7 +217,12 @@ class GameStateNotifier extends Notifier<GameState> {
     final trendBonus = d.subjects.any((b) => _trend.isTrending(state, b))
         ? TrendService.conjectureProgressBonus
         : 0.0;
-    final outcome = _conjectures.workSession(state, id, trendBonus: trendBonus);
+    final ramanujanBonus = state.prestige.mathematicians.contains('ramanujan')
+        ? 0.10
+        : 0.0;
+    final outcome = _conjectures.workSession(
+        state, id,
+        trendBonus: trendBonus, ramanujanBonus: ramanujanBonus);
     if (outcome != null) {
       if (outcome == ConjectureOutcome.refuted) {
         _gainMethodXp(d.failureMethodXp);

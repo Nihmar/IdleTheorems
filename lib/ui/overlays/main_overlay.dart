@@ -17,6 +17,7 @@ import '../../domain/services/subject_service.dart';
 import '../../game/systems/career_system.dart';
 import '../../game/systems/conjecture_system.dart';
 import '../../game/systems/friction_system.dart';
+import '../../game/systems/prestige_service.dart';
 import '../../game/systems/trend_service.dart';
 import '../../game/systems/production_system.dart';
 import '../../providers/game_state_provider.dart';
@@ -59,6 +60,30 @@ String? onboardingHint(GameState s) {
 
 /// Root Flutter overlay: HUD counters, career chip, onboarding banner,
 /// bottom action bar and the research shop panel.
+/// Confirmation dialog for the prestige reboot.
+void _confirmPrestige(BuildContext context, int gain, VoidCallback doIt) {
+  showDialog<void>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text('Begin a new chapter?'),
+      content:
+          Text('Lifetime Fame converts into $gain Eredità. Producers, branches, '
+              'upgrades, trends and active conjectures all reset.'),
+      actions: [
+        TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel')),
+        FilledButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              doIt();
+            },
+            child: const Text('Prestige')),
+      ],
+    ),
+  );
+}
+
 class MainOverlay extends ConsumerWidget {
   const MainOverlay({super.key});
 
@@ -343,6 +368,45 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
                             child: Text(CareerSystem.nextStageHint(s),
                                 style: const TextStyle(
                                     color: Colors.white70, fontSize: 12)),
+                          ),
+                        _sectionHeader('Legacy'),
+                        Row(children: [
+                          Text('Eredità ${s.prestige.legacy}',
+                              style: const TextStyle(
+                                  color: Color(0xE6FFD75E),
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold)),
+                          const Spacer(),
+                          Text(
+                              '+${((const PrestigeService().productionMultiplier(s) - 1) * 100).toStringAsFixed(0)}% production',
+                              style: const TextStyle(
+                                  color: Colors.white70, fontSize: 12)),
+                        ]),
+                        ShopCard(
+                          name: 'Prestige',
+                          description:
+                              'Reboot the run for ${ref.read(gameStateProvider.notifier).legacyGainNow} Eredità. Keeps Metodo level, proven conjectures and mathematicians.',
+                          costLabel:
+                              'Needs ${PrestigeService.minLegacyForPrestige}+ from this run',
+                          canAfford: const PrestigeService().canPrestige(s),
+                          onBuy: () => _confirmPrestige(context,
+                              ref.read(gameStateProvider.notifier).legacyGainNow,
+                              () =>
+                                  ref.read(gameStateProvider.notifier).prestige()),
+                        ),
+                        for (final m in mathematicians)
+                          ShopCard(
+                            name: m.name,
+                            description: m.perk,
+                            costLabel: s.prestige.mathematicians.contains(m.id)
+                                ? 'Hired'
+                                : '${m.cost} Eredità',
+                            canAfford:
+                                !s.prestige.mathematicians.contains(m.id) &&
+                                    s.prestige.legacy >= m.cost,
+                            onBuy: () => ref
+                                .read(gameStateProvider.notifier)
+                                .hireMathematician(m.id),
                           ),
                         _sectionHeader('Counting'),
                         for (final p in countingProducers)
