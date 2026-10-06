@@ -1,5 +1,16 @@
 # Agent guidelines
 
+## Language
+
+- **English first.** All code, comments, UI copy, logs, commit messages and PR descriptions are in English.
+- Other languages come later via an i18n layer; until then never hardcode non-English strings.
+
+## Design source of truth
+
+- `Idle Theorems.md` is the game design doc (mechanics, balance numbers, save format).
+  Read the relevant sections before changing mechanics. Balance values there are a **v0 draft**:
+  proportions matter, absolute values get validated by playtest (doc §13.11).
+
 ## Git workflow
 
 - **Commit messages must be in English.** Keep them short and imperative (e.g. `Add theorem X`, not `Aggiunto il teorema X`).
@@ -19,3 +30,10 @@ gh issue create              # report an issue
 ```
 
 Do not use raw HTTPS calls or the web UI; prefer `gh` commands.
+
+## Code quality
+
+- Follow `analysis_options.yaml`; no dead code, no unresolved TODOs.
+- **Run `flutter analyze` and `dart fix --apply` often** — after every file
+  change or batch of changes, not just at the end. Fix analyzer findings as
+  you go; never accumulate warnings.
