@@ -6,6 +6,7 @@ import 'package:katex/katex.dart';
 
 import '../../domain/models/game_state.dart';
 import '../../domain/models/producers.dart';
+import '../../domain/models/resources.dart';
 import '../../domain/models/upgrade.dart';
 import '../../domain/services/balance_service.dart';
 import '../../game/systems/career_system.dart';
@@ -270,7 +271,7 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
                           description: u.description,
                           owned: s.levelOf(u.id),
                           costLabel: formatCost(balance.upgradeCost(u, s.levelOf(u.id)), u.currency),
-                          canAfford: s.resources.canAfford(_costForKind(u.currency, balance.upgradeCost(u, s.levelOf(u.id)))),
+                          canAfford: s.resources.canAffordOf(u.currency, balance.upgradeCost(u, s.levelOf(u.id))),
                           onBuy: () => ref.read(gameStateProvider.notifier).buyUpgrade(u.id),
                         ),
                       _sectionHeader('Publication desk'),
@@ -331,17 +332,6 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
     );
   }
 
-  double _costForKind(ResourceKind kind, double amount) {
-    switch (kind) {
-      case ResourceKind.counting:
-        return amount;
-      case ResourceKind.proofing:
-        return amount;
-      case ResourceKind.fame:
-        return amount;
-    }
-  }
-
   Widget _producerRow(ProducerDef p) {
     final owned = ref.read(gameStateProvider).levelOf(p.id);
     final cost = const BalanceService().producerCost(p, owned);
@@ -350,7 +340,7 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
       description: p.description,
       owned: owned,
       costLabel: formatCost(cost, p.currency),
-      canAfford: ref.read(gameStateProvider).resources.canAfford(_costForKind(p.currency, cost)),
+      canAfford: ref.read(gameStateProvider).resources.canAffordOf(p.currency, cost),
       onBuy: () => ref.read(gameStateProvider.notifier).buyProducer(p.id),
     );
   }
