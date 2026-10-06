@@ -14,6 +14,7 @@ import '../domain/services/subject_service.dart';
 import '../game/systems/career_system.dart';
 import '../game/systems/conjecture_system.dart';
 import '../game/systems/friction_system.dart';
+import '../game/systems/trend_service.dart';
 import '../game/systems/production_system.dart';
 import '../game/systems/review_service.dart';
 
@@ -30,6 +31,7 @@ class GameStateNotifier extends Notifier<GameState> {
   final SubjectService _subjects = const SubjectService();
   final ConjectureSystem _conjectures = ConjectureSystem();
   final FrictionSystem _friction = const FrictionSystem();
+  final TrendService _trend = const TrendService();
   final Random _rng = Random();
 
   VoidCallback? _saveHook;
@@ -186,7 +188,11 @@ class GameStateNotifier extends Notifier<GameState> {
   void workOnConjecture(String id) {
     final d = _conjectures.def(id);
     if (d == null || !_conjectures.canWork(state, id)) return;
-    final outcome = _conjectures.workSession(state, id);
+    // Trending branch: +25% progress on its conjectures (section 4).
+    final trendBonus = d.subjects.any((b) => _trend.isTrending(state, b))
+        ? TrendService.conjectureProgressBonus
+        : 0.0;
+    final outcome = _conjectures.workSession(state, id, trendBonus: trendBonus);
     if (outcome != null) {
       if (outcome == ConjectureOutcome.refuted) {
         _gainMethodXp(d.failureMethodXp);
@@ -210,6 +216,7 @@ class GameStateNotifier extends Notifier<GameState> {
           (state.stats.retractions - retractionsBefore));
     }
     _expireNotice();
+    _trend.update(state);
     _conjectures.update(state);
     _career.update(state);
     _refresh();
@@ -284,6 +291,10 @@ class GameStateNotifier extends Notifier<GameState> {
         fame *= mods.famePerPaperMult;
         // Papers earn half Fame until the thesis is defended (section 5).
         fame *= CareerSystem.paperFameFactor(state.career);
+        // Focusing the trending field doubles paper Fame (sections 3/13.10).
+        if (_trend.isTrending(state, state.activeSubjectId)) {
+          fame *= TrendService.paperFameMult;
+        }
         if (_rng.nextDouble() < mods.fameBurstChance) {
           fame *= mods.fameBurstMult;
         }
