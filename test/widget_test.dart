@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:idle_theorems/domain/models/game_state.dart';
+import 'package:idle_theorems/domain/models/save_data.dart';
 import 'package:idle_theorems/providers/game_state_provider.dart';
 import 'package:idle_theorems/ui/overlays/main_overlay.dart';
 
@@ -119,7 +120,34 @@ void main() {
     expect(find.textContaining('Stressed'), findsOneWidget);
     await tester.tap(find.text('Shop'));
     await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(find.text('Sabbatical'), 200);
+    // The sabbatical card sits below the fold of the lazy shop list.
+    for (var i = 0;
+        i < 10 && find.textContaining('Sabbatical').evaluate().isEmpty;
+        i++) {
+      await tester.dragFrom(const Offset(400, 500), const Offset(0, -400));
+      await tester.pumpAndSettle();
+    }
     expect(find.textContaining('Sabbatical'), findsOneWidget);
+  });
+
+  testWidgets('active trend shows its chip and the telegraphed successor',
+      (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    final now = DateTime.now();
+    container.read(gameStateProvider.notifier).bootstrap(
+        GameState()
+          ..playerName = 'Blaise'
+          ..trend = TrendState(
+            activeSubject: 'analysis',
+            endsAt: now.add(const Duration(hours: 10)),
+            nextSubject: 'topology',
+            nextStartsAt: now.add(const Duration(hours: 10)),
+          ));
+
+    await tester.pumpWidget(wrap(container));
+
+    expect(find.textContaining('Trend: Analysis'), findsOneWidget);
+    expect(find.textContaining('Up next: Topology'), findsOneWidget);
   });
 }
