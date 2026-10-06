@@ -99,7 +99,14 @@ class ConjectureSystem {
   /// One paid work session. Returns the outcome when this session pushed
   /// progress to 100% (and rolled), otherwise null. [trendBonus] adds the
   /// trending-branch progress fraction (section 4 rules table).
-  ConjectureOutcome? workSession(GameState s, String id, {double trendBonus = 0}) {
+  /// [ramanujanBonus] raises P(successo) by that fraction and adds a 5%
+  /// insight flash per session (prestige perk, section 13.9).
+  ConjectureOutcome? workSession(
+    GameState s,
+    String id, {
+    double trendBonus = 0,
+    double ramanujanBonus = 0,
+  }) {
     final st = stateOf(s, id);
     final d = conjectureCatalog[id];
     if (st == null || d == null || !canWork(s, id)) return null;
@@ -112,18 +119,24 @@ class ConjectureSystem {
         _rng.nextDouble() < intuitionChance) {
       gain *= intuitionProgressMult;
     }
+    // Ramanujan's insight flash: occasional doubled session gain.
+    if (ramanujanBonus > 0 && _rng.nextDouble() < 0.05) {
+      gain *= 2;
+    }
     st.lastWorkAt = DateTime.now();
     st.progress += gain;
     if (st.progress >= 100) {
       st.progress = 100;
-      return _resolve(s, st, d);
+      return _resolve(s, st, d, ramanujanBonus);
     }
     return null;
   }
 
-  ConjectureOutcome _resolve(GameState s, ConjectureState st, ConjectureDef d) {
+  ConjectureOutcome _resolve(
+      GameState s, ConjectureState st, ConjectureDef d, double ramanujanBonus) {
     st.attempts++;
-    if (_rng.nextDouble() < successProbability(s.metodoLevel, d.tier)) {
+    if (_rng.nextDouble() <
+        successProbability(s.metodoLevel, d.tier, ramanujanBonus: ramanujanBonus)) {
       st.status = ConjectureStatus.proven;
       st.resolvedAt = DateTime.now();
       _applyRewards(s, d.successRewards);
@@ -160,6 +173,7 @@ class ConjectureSystem {
           s.gain(0, 0, r.value);
         case RewardType.legacyBonus:
           s.prestige.legacy += r.value.round();
+          s.prestige.legacyAllTime += r.value.round();
       }
     }
   }

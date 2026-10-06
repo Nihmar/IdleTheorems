@@ -1,6 +1,8 @@
 import '../../domain/models/game_state.dart';
 import '../../domain/models/producers.dart';
 import '../../domain/services/subject_service.dart';
+import 'friction_system.dart';
+import 'prestige_service.dart';
 
 /// Per-second production rates derived from the current state.
 class ProductionRates {
@@ -46,6 +48,8 @@ class ProductionSystem {
     }
     c *= countingMultiplier(s);
     c = c * m.countingMultiplier + m.countingRateAdd;
+    // Gauss: Counting ×2 (prestige perk, section 13.9).
+    if (const PrestigeService().hasMathematician(s, 'gauss')) c *= 2;
 
     // Base proofing only exists once elementary formalization is learned;
     // techniques and collaborators scale everything that produces P.
@@ -58,6 +62,11 @@ class ProductionSystem {
         _techniqueMultiplier(s) * (1 + 0.5 * s.levelOf('collaborator'));
     var p = (baseP + producersP) * pMult;
     p = p * m.proofingMultiplier + m.proofingRateAdd;
+    // Noether: Proofing ×2 while focused on algebraic branches (§13.9).
+    if (const PrestigeService().hasMathematician(s, 'noether') &&
+        algebraicBranchIds.contains(s.activeSubjectId)) {
+      p *= 2;
+    }
 
     // Completed subjects can compound output while actively playing
     // (+0.5%/min since session start, capped at x2).
@@ -77,9 +86,26 @@ class ProductionSystem {
     c *= s.conjectureCountingMult * s.conjectureGlobalMult;
     p *= s.conjectureProofingMult * s.conjectureGlobalMult;
 
+    // Lifetime Legacy: every point permanently adds +2% to all production.
+    final legacyMult = const PrestigeService().productionMultiplier(s);
+    c *= legacyMult;
+    p *= legacyMult;
+
+    // Burnout halves every channel while active (section 13.10).
+    final burnMult = const FrictionSystem().productionMultiplier(s);
+    c *= burnMult;
+    p *= burnMult;
+
     // Passive citations: 0.01 F/s per published paper this run.
-    final f =
-        0.01 * s.papersInRun * fameMultiplier(s) * m.globalResourceMult * s.conjectureGlobalMult;
+    var f = 0.01 *
+        s.papersInRun *
+        fameMultiplier(s) *
+        m.globalResourceMult *
+        s.conjectureGlobalMult *
+        burnMult;
+    // Euler: citation Fame ×2 (prestige perk, section 13.9).
+    if (const PrestigeService().hasMathematician(s, 'euler')) f *= 2;
+    f *= legacyMult;
 
     return ProductionRates(c, p, f);
   }

@@ -13,6 +13,9 @@ import '../domain/services/offline_service.dart';
 import '../domain/services/subject_service.dart';
 import '../game/systems/career_system.dart';
 import '../game/systems/conjecture_system.dart';
+import '../game/systems/friction_system.dart';
+import '../game/systems/prestige_service.dart';
+import '../game/systems/trend_service.dart';
 import '../game/systems/production_system.dart';
 import '../game/systems/review_service.dart';
 
@@ -28,6 +31,9 @@ class GameStateNotifier extends Notifier<GameState> {
   final BalanceService _balance = const BalanceService();
   final SubjectService _subjects = const SubjectService();
   final ConjectureSystem _conjectures = ConjectureSystem();
+  final FrictionSystem _friction = const FrictionSystem();
+  final TrendService _trend = const TrendService();
+  final PrestigeService _prestige = const PrestigeService();
   final Random _rng = Random();
 
   VoidCallback? _saveHook;
@@ -162,6 +168,37 @@ class GameStateNotifier extends Notifier<GameState> {
     return ok;
   }
 
+  /// Sabbatical: pay 10% of current Fame to clear stress instantly (§13.10).
+  bool takeSabbatical() {
+    if (!_friction.takeSabbatical(state)) return false;
+    _notice('A well-earned break. Stress cleared.');
+    _afterMutation();
+    return true;
+  }
+
+  // ------------------------------------------------------------ prestige
+
+  int get legacyGainNow => _prestige.legacyGain(state);
+
+  /// Reboots the run into Legacy points (sections 6 and 13.9).
+  bool prestige() {
+    if (!_prestige.canPrestige(state)) return false;
+    final gain = _prestige.legacyGain(state);
+    _prestige.applyPrestige(state);
+    _notice('+$gain Eredità — a new chapter begins.');
+    _afterMutation();
+    return true;
+  }
+
+  /// Hires a historical mathematician with Legacy points.
+  bool hireMathematician(String id) {
+    final def = mathematicianById(id);
+    if (def == null || !_prestige.hireMathematician(state, id)) return false;
+    _notice(def.lore);
+    _afterMutation();
+    return true;
+  }
+
   // ---------------------------------------------------------- conjectures
 
   /// Pays the one-time formulation cost (postdoc gate, §5).
@@ -176,7 +213,16 @@ class GameStateNotifier extends Notifier<GameState> {
   void workOnConjecture(String id) {
     final d = _conjectures.def(id);
     if (d == null || !_conjectures.canWork(state, id)) return;
-    final outcome = _conjectures.workSession(state, id);
+    // Trending branch: +25% progress on its conjectures (section 4).
+    final trendBonus = d.subjects.any((b) => _trend.isTrending(state, b))
+        ? TrendService.conjectureProgressBonus
+        : 0.0;
+    final ramanujanBonus = state.prestige.mathematicians.contains('ramanujan')
+        ? 0.10
+        : 0.0;
+    final outcome = _conjectures.workSession(
+        state, id,
+        trendBonus: trendBonus, ramanujanBonus: ramanujanBonus);
     if (outcome != null) {
       if (outcome == ConjectureOutcome.refuted) {
         _gainMethodXp(d.failureMethodXp);
@@ -187,10 +233,20 @@ class GameStateNotifier extends Notifier<GameState> {
     _afterMutation();
   }
 
-  /// Per-frame tick: passive production, paper pipeline, career gates.
+  /// Per-frame tick: passive production, paper pipeline, frictions, gates.
   void tick(double dt) {
     _production.tick(state, dt, _subjects.modifiers(state));
     _advancePapers(dt);
+    final retractionsBefore = state.stats.retractions;
+    for (final msg in _friction.tick(state, dt)) {
+      _notice(msg);
+    }
+    if (state.stats.retractions > retractionsBefore) {
+      _gainMethodXp(FrictionSystem.retractionMethodXp *
+          (state.stats.retractions - retractionsBefore));
+    }
+    _expireNotice();
+    _trend.update(state);
     _conjectures.update(state);
     _career.update(state);
     _refresh();
@@ -263,11 +319,18 @@ class GameStateNotifier extends Notifier<GameState> {
           afterRevision: job.revisionBonus,
         );
         fame *= mods.famePerPaperMult;
+        // Papers earn half Fame until the thesis is defended (section 5).
+        fame *= CareerSystem.paperFameFactor(state.career);
+        // Focusing the trending field doubles paper Fame (sections 3/13.10).
+        if (_trend.isTrending(state, state.activeSubjectId)) {
+          fame *= TrendService.paperFameMult;
+        }
         if (_rng.nextDouble() < mods.fameBurstChance) {
           fame *= mods.fameBurstMult;
         }
         state.gain(0, 0, fame);
         state.stats.papersPublished++;
+        _friction.maybeScheduleRetraction(state, _rng);
         _subjects.registerAcceptedPaper(state);
         return true;
       case ReviewOutcome.revisionRequested:
@@ -280,6 +343,20 @@ class GameStateNotifier extends Notifier<GameState> {
         state.stats.papersRejected++;
         _gainMethodXp(ReviewService.methodXpOnRejection);
         return true;
+    }
+  }
+
+  /// Short-lived HUD notice (retractions, burnout, breaks).
+  void _notice(String message) {
+    state.transientNotice = message;
+    state.transientNoticeUntil = DateTime.now().add(const Duration(seconds: 8));
+  }
+
+  void _expireNotice() {
+    final until = state.transientNoticeUntil;
+    if (until != null && !DateTime.now().isBefore(until)) {
+      state.transientNotice = null;
+      state.transientNoticeUntil = null;
     }
   }
 

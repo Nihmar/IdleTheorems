@@ -16,6 +16,9 @@ import '../../domain/services/offline_service.dart';
 import '../../domain/services/subject_service.dart';
 import '../../game/systems/career_system.dart';
 import '../../game/systems/conjecture_system.dart';
+import '../../game/systems/friction_system.dart';
+import '../../game/systems/prestige_service.dart';
+import '../../game/systems/trend_service.dart';
 import '../../game/systems/production_system.dart';
 import '../../providers/game_state_provider.dart';
 import '../../utils/number_format.dart';
@@ -57,6 +60,30 @@ String? onboardingHint(GameState s) {
 
 /// Root Flutter overlay: HUD counters, career chip, onboarding banner,
 /// bottom action bar and the research shop panel.
+/// Confirmation dialog for the prestige reboot.
+void _confirmPrestige(BuildContext context, int gain, VoidCallback doIt) {
+  showDialog<void>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text('Begin a new chapter?'),
+      content:
+          Text('Lifetime Fame converts into $gain Eredità. Producers, branches, '
+              'upgrades, trends and active conjectures all reset.'),
+      actions: [
+        TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel')),
+        FilledButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              doIt();
+            },
+            child: const Text('Prestige')),
+      ],
+    ),
+  );
+}
+
 class MainOverlay extends ConsumerWidget {
   const MainOverlay({super.key});
 
@@ -66,6 +93,7 @@ class MainOverlay extends ConsumerWidget {
     final rates = const ProductionSystem()
         .compute(s, const SubjectService().modifiers(s));
     final services = const SubjectService();
+    final trendSvc = const TrendService();
     final focusDef = s.activeSubjectId.isEmpty ? null : subjectCatalog[s.activeSubjectId];
     final lastAwayReport = ref.watch(gameStateProvider.notifier).lastAwayReport;
 
@@ -100,22 +128,44 @@ class MainOverlay extends ConsumerWidget {
                                 fontSize: 16,
                                 fontStyle: FontStyle.italic,
                                 fontFamily: 'serif')),
-                        const Spacer(),
-                        if (s.playerName.isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.only(right: 8),
-                            child:
-                                _Chip(label: s.playerName, icon: Icons.badge_outlined),
-                          ),
-                        _Chip(label: s.career.stage.label, icon: Icons.school_outlined),
                         const SizedBox(width: 8),
-                        _Chip(label: 'Metodo Lv ${s.metodoLevel}', icon: Icons.psychology_alt),
-                        if (focusDef != null)
-                          _Chip(
-                            label:
-                                '${focusDef.name} ${services.theoremsOf(s, focusDef.id)}/${masteryNeeded(focusDef.level)}',
-                            icon: Icons.category_outlined,
-                          ),
+                        Expanded(
+                            child: SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                child: Row(children: [
+                              if (s.playerName.isNotEmpty)
+                                _Chip(label: s.playerName,
+                                    icon: Icons.badge_outlined),
+                              const SizedBox(width: 8),
+                              _Chip(label: s.career.stage.label,
+                                  icon: Icons.school_outlined),
+                              const SizedBox(width: 8),
+                              _Chip(label: 'Metodo Lv ${s.metodoLevel}',
+                                  icon: Icons.psychology_alt),
+                              if (focusDef != null) ...[
+                                const SizedBox(width: 8),
+                                _Chip(
+                                  label:
+                                      '${focusDef.name} ${services.theoremsOf(s, focusDef.id)}/${masteryNeeded(focusDef.level)}',
+                                  icon: Icons.category_outlined,
+                                ),
+                              ],
+                              if (trendSvc.isActive(s)) ...[
+                                const SizedBox(width: 8),
+                                _Chip(
+                                  label: 'Trend: ${subjectCatalog[s.trend.activeSubject]?.name ?? ''}'
+                                      ' · ${s.trend.endsAt!.difference(DateTime.now()).inHours}h',
+                                  icon: Icons.trending_up,
+                                ),
+                              ],
+                              if (trendSvc.shouldAnnounceNext(s)) ...[
+                                const SizedBox(width: 8),
+                                _Chip(
+                                  label: 'Up next: ${subjectCatalog[s.trend.nextSubject]?.name ?? ''}',
+                                  icon: Icons.schedule,
+                                ),
+                              ],
+                            ]))),
                       ]),
                       const SizedBox(height: 8),
                       Row(children: [
@@ -149,6 +199,28 @@ class MainOverlay extends ConsumerWidget {
                                   .read(gameStateProvider.notifier)
                                   .dismissAwayReport(),
                         ),
+                      ],
+                      if (s.transientNotice != null ||
+                          const FrictionSystem().isBurnedOut(s) ||
+                          s.stress > 0.1) ...
+                      [
+                        const SizedBox(height: 8),
+                        Row(children: [
+                          if (const FrictionSystem().isBurnedOut(s))
+                            _Chip(label: 'Burned out', icon: Icons.battery_alert),
+                          if (!const FrictionSystem().isBurnedOut(s) &&
+                              s.stress > 0.1)
+                            _Chip(
+                                label: 'Stressed ${(s.stress * 100).round()}%',
+                                icon: Icons.sentiment_dissatisfied),
+                          if (s.transientNotice != null)
+                            Expanded(
+                                child:
+                                    Text(s.transientNotice!,
+                                        style: const TextStyle(
+                                            color: Color(0xE6FFD75E),
+                                            fontSize: 13))),
+                        ]),
                       ],
                       if (onboardingHint(s) != null) ...[
                         const SizedBox(height: 8),
@@ -290,6 +362,52 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
                       ]),
                       const SizedBox(height: 8),
                       if (_tab == 'shop') ...[
+                        if (CareerSystem.nextStageHint(s).isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 4),
+                            child: Text(CareerSystem.nextStageHint(s),
+                                style: const TextStyle(
+                                    color: Colors.white70, fontSize: 12)),
+                          ),
+                        _sectionHeader('Legacy'),
+                        Row(children: [
+                          Text('Eredità ${s.prestige.legacy}',
+                              style: const TextStyle(
+                                  color: Color(0xE6FFD75E),
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold)),
+                          const Spacer(),
+                          Text(
+                              '+${((const PrestigeService().productionMultiplier(s) - 1) * 100).toStringAsFixed(0)}% production',
+                              style: const TextStyle(
+                                  color: Colors.white70, fontSize: 12)),
+                        ]),
+                        ShopCard(
+                          name: 'Prestige',
+                          description:
+                              'Reboot the run for ${ref.read(gameStateProvider.notifier).legacyGainNow} Eredità. Keeps Metodo level, proven conjectures and mathematicians.',
+                          costLabel:
+                              'Needs ${PrestigeService.minLegacyForPrestige}+ from this run',
+                          canAfford: const PrestigeService().canPrestige(s),
+                          onBuy: () => _confirmPrestige(context,
+                              ref.read(gameStateProvider.notifier).legacyGainNow,
+                              () =>
+                                  ref.read(gameStateProvider.notifier).prestige()),
+                        ),
+                        for (final m in mathematicians)
+                          ShopCard(
+                            name: m.name,
+                            description: m.perk,
+                            costLabel: s.prestige.mathematicians.contains(m.id)
+                                ? 'Hired'
+                                : '${m.cost} Eredità',
+                            canAfford:
+                                !s.prestige.mathematicians.contains(m.id) &&
+                                    s.prestige.legacy >= m.cost,
+                            onBuy: () => ref
+                                .read(gameStateProvider.notifier)
+                                .hireMathematician(m.id),
+                          ),
                         _sectionHeader('Counting'),
                         for (final p in countingProducers)
                           _producerRow(p),
@@ -319,6 +437,17 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
                             costLabel: formatCost(CareerSystem.thesisCostProofing, ResourceKind.proofing),
                             canAfford: s.resources.canAfford(0, CareerSystem.thesisCostProofing),
                             onBuy: () => ref.read(gameStateProvider.notifier).defendThesis(),
+                          ),
+                        if (s.stress > 0 || const FrictionSystem().isBurnedOut(s))
+                          ShopCard(
+                            name: 'Sabbatical',
+                            description:
+                                'Take a break: clears all stress instantly (costs 10% of current Fame).',
+                            costLabel: formatCost(
+                                s.resources.fame * FrictionSystem.sabbaticalCostFraction,
+                                ResourceKind.fame),
+                            canAfford: s.resources.fame > 0,
+                            onBuy: () => ref.read(gameStateProvider.notifier).takeSabbatical(),
                           ),
                       ] else if (_tab == 'conjectures') ...[
                         _sectionHeader('Discovery'),
