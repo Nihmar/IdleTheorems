@@ -12,6 +12,7 @@ import '../domain/services/balance_service.dart';
 import '../domain/services/offline_service.dart';
 import '../domain/services/subject_service.dart';
 import '../game/systems/career_system.dart';
+import '../game/systems/conjecture_system.dart';
 import '../game/systems/production_system.dart';
 import '../game/systems/review_service.dart';
 
@@ -26,6 +27,7 @@ class GameStateNotifier extends Notifier<GameState> {
   final CareerSystem _career = CareerSystem();
   final BalanceService _balance = const BalanceService();
   final SubjectService _subjects = const SubjectService();
+  final ConjectureSystem _conjectures = ConjectureSystem();
   final Random _rng = Random();
 
   VoidCallback? _saveHook;
@@ -97,7 +99,8 @@ class GameStateNotifier extends Notifier<GameState> {
   void solveExercise() {
     final m = _subjects.modifiers(state);
     final power = _balance.clickPower(state.levelOf('study_tools')) *
-        m.clickMultiplier * m.globalResourceMult;
+        m.clickMultiplier * m.globalResourceMult *
+        state.conjectureCountingMult * state.conjectureGlobalMult;
     state.gain(power);
     state.stats.totalClicks++;
     _refresh();
@@ -159,10 +162,36 @@ class GameStateNotifier extends Notifier<GameState> {
     return ok;
   }
 
+  // ---------------------------------------------------------- conjectures
+
+  /// Pays the one-time formulation cost (postdoc gate, §5).
+  bool formulateConjecture(String id) {
+    if (!_conjectures.canFormulate(state, id)) return false;
+    if (!_conjectures.formulate(state, id)) return false;
+    _afterMutation();
+    return true;
+  }
+
+  /// One paid work session; a failed roll grants Metodo XP (§4).
+  void workOnConjecture(String id) {
+    final d = _conjectures.def(id);
+    if (d == null || !_conjectures.canWork(state, id)) return;
+    final outcome = _conjectures.workSession(state, id);
+    if (outcome != null) {
+      if (outcome == ConjectureOutcome.refuted) {
+        _gainMethodXp(d.failureMethodXp);
+      } else {
+        state.stats.conjecturesSolved++;
+      }
+    }
+    _afterMutation();
+  }
+
   /// Per-frame tick: passive production, paper pipeline, career gates.
   void tick(double dt) {
     _production.tick(state, dt, _subjects.modifiers(state));
     _advancePapers(dt);
+    _conjectures.update(state);
     _career.update(state);
     _refresh();
   }
