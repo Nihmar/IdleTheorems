@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:idle_theorems/domain/models/career.dart';
 import 'package:idle_theorems/domain/models/game_state.dart';
 import 'package:idle_theorems/domain/models/save_data.dart';
 import 'package:idle_theorems/providers/game_state_provider.dart';
@@ -64,6 +65,13 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Research shop'), findsOneWidget);
+    // The Legacy section pushes producers below the fold: scroll down.
+    for (var i = 0;
+        i < 10 && find.textContaining('Guided exercises').evaluate().isEmpty;
+        i++) {
+      await tester.dragFrom(const Offset(400, 500), const Offset(0, -400));
+      await tester.pumpAndSettle();
+    }
     expect(find.textContaining('Guided exercises'), findsWidgets);
   });
 
@@ -128,6 +136,34 @@ void main() {
       await tester.pumpAndSettle();
     }
     expect(find.textContaining('Sabbatical'), findsOneWidget);
+  });
+
+  testWidgets('prestige reboots the run through the confirmation dialog',
+      (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    final notifier = container.read(gameStateProvider.notifier);
+    notifier.bootstrap(GameState()
+      ..playerName = 'Blaise'
+      ..gain(0, 0, 1e4)
+      ..career.stage = CareerStage.postdoc);
+
+    await tester.pumpWidget(wrap(container));
+
+    await tester.tap(find.text('Shop'));
+    await tester.pumpAndSettle();
+    expect(find.text('Gauss'), findsOneWidget);
+
+    await tester.tap(find.text('Needs 10+ from this run'));
+    await tester.pumpAndSettle();
+    expect(find.text('Begin a new chapter?'), findsOneWidget);
+    await tester.tap(find.text('Prestige').last);
+    await tester.pumpAndSettle();
+
+    final s = container.read(gameStateProvider);
+    expect(s.prestige.legacy, 10);
+    expect(s.career.stage, CareerStage.student);
+    expect(s.resources.fame, 0);
   });
 
   testWidgets('active trend shows its chip and the telegraphed successor',
