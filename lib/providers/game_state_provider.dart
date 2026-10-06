@@ -13,6 +13,7 @@ import '../domain/services/offline_service.dart';
 import '../domain/services/subject_service.dart';
 import '../game/systems/career_system.dart';
 import '../game/systems/conjecture_system.dart';
+import '../game/systems/friction_system.dart';
 import '../game/systems/production_system.dart';
 import '../game/systems/review_service.dart';
 
@@ -28,6 +29,7 @@ class GameStateNotifier extends Notifier<GameState> {
   final BalanceService _balance = const BalanceService();
   final SubjectService _subjects = const SubjectService();
   final ConjectureSystem _conjectures = ConjectureSystem();
+  final FrictionSystem _friction = const FrictionSystem();
   final Random _rng = Random();
 
   VoidCallback? _saveHook;
@@ -162,6 +164,14 @@ class GameStateNotifier extends Notifier<GameState> {
     return ok;
   }
 
+  /// Sabbatical: pay 10% of current Fame to clear stress instantly (§13.10).
+  bool takeSabbatical() {
+    if (!_friction.takeSabbatical(state)) return false;
+    _notice('A well-earned break. Stress cleared.');
+    _afterMutation();
+    return true;
+  }
+
   // ---------------------------------------------------------- conjectures
 
   /// Pays the one-time formulation cost (postdoc gate, §5).
@@ -187,10 +197,19 @@ class GameStateNotifier extends Notifier<GameState> {
     _afterMutation();
   }
 
-  /// Per-frame tick: passive production, paper pipeline, career gates.
+  /// Per-frame tick: passive production, paper pipeline, frictions, gates.
   void tick(double dt) {
     _production.tick(state, dt, _subjects.modifiers(state));
     _advancePapers(dt);
+    final retractionsBefore = state.stats.retractions;
+    for (final msg in _friction.tick(state, dt)) {
+      _notice(msg);
+    }
+    if (state.stats.retractions > retractionsBefore) {
+      _gainMethodXp(FrictionSystem.retractionMethodXp *
+          (state.stats.retractions - retractionsBefore));
+    }
+    _expireNotice();
     _conjectures.update(state);
     _career.update(state);
     _refresh();
@@ -263,11 +282,14 @@ class GameStateNotifier extends Notifier<GameState> {
           afterRevision: job.revisionBonus,
         );
         fame *= mods.famePerPaperMult;
+        // Papers earn half Fame until the thesis is defended (section 5).
+        fame *= CareerSystem.paperFameFactor(state.career);
         if (_rng.nextDouble() < mods.fameBurstChance) {
           fame *= mods.fameBurstMult;
         }
         state.gain(0, 0, fame);
         state.stats.papersPublished++;
+        _friction.maybeScheduleRetraction(state, _rng);
         _subjects.registerAcceptedPaper(state);
         return true;
       case ReviewOutcome.revisionRequested:
@@ -280,6 +302,20 @@ class GameStateNotifier extends Notifier<GameState> {
         state.stats.papersRejected++;
         _gainMethodXp(ReviewService.methodXpOnRejection);
         return true;
+    }
+  }
+
+  /// Short-lived HUD notice (retractions, burnout, breaks).
+  void _notice(String message) {
+    state.transientNotice = message;
+    state.transientNoticeUntil = DateTime.now().add(const Duration(seconds: 8));
+  }
+
+  void _expireNotice() {
+    final until = state.transientNoticeUntil;
+    if (until != null && !DateTime.now().isBefore(until)) {
+      state.transientNotice = null;
+      state.transientNoticeUntil = null;
     }
   }
 

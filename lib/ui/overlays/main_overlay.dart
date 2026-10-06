@@ -16,6 +16,7 @@ import '../../domain/services/offline_service.dart';
 import '../../domain/services/subject_service.dart';
 import '../../game/systems/career_system.dart';
 import '../../game/systems/conjecture_system.dart';
+import '../../game/systems/friction_system.dart';
 import '../../game/systems/production_system.dart';
 import '../../providers/game_state_provider.dart';
 import '../../utils/number_format.dart';
@@ -149,6 +150,28 @@ class MainOverlay extends ConsumerWidget {
                                   .read(gameStateProvider.notifier)
                                   .dismissAwayReport(),
                         ),
+                      ],
+                      if (s.transientNotice != null ||
+                          const FrictionSystem().isBurnedOut(s) ||
+                          s.stress > 0.1) ...
+                      [
+                        const SizedBox(height: 8),
+                        Row(children: [
+                          if (const FrictionSystem().isBurnedOut(s))
+                            _Chip(label: 'Burned out', icon: Icons.battery_alert),
+                          if (!const FrictionSystem().isBurnedOut(s) &&
+                              s.stress > 0.1)
+                            _Chip(
+                                label: 'Stressed ${(s.stress * 100).round()}%',
+                                icon: Icons.sentiment_dissatisfied),
+                          if (s.transientNotice != null)
+                            Expanded(
+                                child:
+                                    Text(s.transientNotice!,
+                                        style: const TextStyle(
+                                            color: Color(0xE6FFD75E),
+                                            fontSize: 13))),
+                        ]),
                       ],
                       if (onboardingHint(s) != null) ...[
                         const SizedBox(height: 8),
@@ -290,6 +313,13 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
                       ]),
                       const SizedBox(height: 8),
                       if (_tab == 'shop') ...[
+                        if (CareerSystem.nextStageHint(s).isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 4),
+                            child: Text(CareerSystem.nextStageHint(s),
+                                style: const TextStyle(
+                                    color: Colors.white70, fontSize: 12)),
+                          ),
                         _sectionHeader('Counting'),
                         for (final p in countingProducers)
                           _producerRow(p),
@@ -319,6 +349,17 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
                             costLabel: formatCost(CareerSystem.thesisCostProofing, ResourceKind.proofing),
                             canAfford: s.resources.canAfford(0, CareerSystem.thesisCostProofing),
                             onBuy: () => ref.read(gameStateProvider.notifier).defendThesis(),
+                          ),
+                        if (s.stress > 0 || const FrictionSystem().isBurnedOut(s))
+                          ShopCard(
+                            name: 'Sabbatical',
+                            description:
+                                'Take a break: clears all stress instantly (costs 10% of current Fame).',
+                            costLabel: formatCost(
+                                s.resources.fame * FrictionSystem.sabbaticalCostFraction,
+                                ResourceKind.fame),
+                            canAfford: s.resources.fame > 0,
+                            onBuy: () => ref.read(gameStateProvider.notifier).takeSabbatical(),
                           ),
                       ] else if (_tab == 'conjectures') ...[
                         _sectionHeader('Discovery'),
