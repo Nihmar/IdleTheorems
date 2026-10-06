@@ -22,6 +22,7 @@ import '../../game/systems/trend_service.dart';
 import '../../game/systems/production_system.dart';
 import '../../providers/game_state_provider.dart';
 import '../../utils/number_format.dart';
+import '../theme/palette.dart';
 import '../widgets/resource_counter.dart';
 import '../widgets/shop_card.dart';
 
@@ -34,9 +35,6 @@ const List<(String, double, double)> _chalkFormulas = [
   (r'e^{i\pi} + 1 = 0', 0.10, 0.78),
   (r'F = m \cdot a', 0.58, 0.80),
 ];
-
-const Color _chalkColor = Color(0xFFAFC0B8);
-const Color _gold = Color(0xE6FFD75E);
 
 /// Derives the current guided hint for "The first semester" onboarding
 /// (plan section 8). Stateless: progress is read from game state directly.
@@ -108,7 +106,7 @@ class MainOverlay extends ConsumerWidget {
               Positioned(
                 left: fx * w,
                 top: fy * h,
-                child: Math(tex, color: _chalkColor, fontSize: 17),
+                child: Math(tex, color: Palette.ink, fontSize: 17),
               ),
             // Top HUD.
             Positioned(
@@ -124,7 +122,7 @@ class MainOverlay extends ConsumerWidget {
                       Row(children: [
                         Text('Idle Theorems',
                             style: TextStyle(
-                                color: _gold,
+                                color: Palette.accent,
                                 fontSize: 16,
                                 fontStyle: FontStyle.italic,
                                 fontFamily: 'serif')),
@@ -218,7 +216,7 @@ class MainOverlay extends ConsumerWidget {
                                 child:
                                     Text(s.transientNotice!,
                                         style: const TextStyle(
-                                            color: Color(0xE6FFD75E),
+                                            color: Palette.accent,
                                             fontSize: 13))),
                         ]),
                       ],
@@ -228,17 +226,17 @@ class MainOverlay extends ConsumerWidget {
                           padding:
                               const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                           decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.4),
+                            color: Palette.surfaceAlt,
                             borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: _gold.withValues(alpha: 0.5)),
+                            border: Border.all(color: Palette.accent.withValues(alpha: 0.5)),
                           ),
                           child: Row(children: [
-                            const Icon(Icons.lightbulb_outline, size: 16, color: _gold),
+                            const Icon(Icons.lightbulb_outline, size: 16, color: Palette.accent),
                             const SizedBox(width: 8),
                             Expanded(
                                 child: Text(onboardingHint(s)!,
                                     style: const TextStyle(
-                                        color: Colors.white, fontSize: 13))),
+                                        color: Palette.ink, fontSize: 13))),
                           ]),
                         ),
                       ],
@@ -274,14 +272,14 @@ class _Chip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.35),
+        color: Palette.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+        border: Border.all(color: Palette.border),
       ),
       child: Row(mainAxisSize: MainAxisSize.min, children: [
-        Icon(icon, size: 14, color: Colors.white70),
+        Icon(icon, size: 14, color: Palette.inkSoft),
         const SizedBox(width: 5),
-        Text(label, style: const TextStyle(color: Colors.white, fontSize: 12)),
+        Text(label, style: const TextStyle(color: Palette.ink, fontSize: 12)),
       ]),
     );
   }
@@ -321,8 +319,8 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
             curve: Curves.easeOut,
             height: _shopOpen ? widget.h * 0.72 : 0,
             decoration: BoxDecoration(
-              color: const Color(0xE61E2B28),
-              border: Border(top: BorderSide(color: Colors.white.withValues(alpha: 0.25))),
+              color: Palette.surfaceAlt,
+              border: Border(top: BorderSide(color: Palette.border)),
             ),
             child: _shopOpen
                 ? ListView(
@@ -335,7 +333,7 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
                                 ? 'Subject tree'
                                 : 'Conjectures',
                             style: const TextStyle(
-                                color: Colors.white,
+                                color: Palette.ink,
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold)),
                         const Spacer(),
@@ -358,7 +356,7 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
                         ),
                         IconButton(
                             onPressed: () => setState(() => _shopOpen = false),
-                            icon: const Icon(Icons.close, color: Colors.white70)),
+                            icon: const Icon(Icons.close, color: Palette.inkSoft)),
                       ]),
                       const SizedBox(height: 8),
                       if (_tab == 'shop') ...[
@@ -367,20 +365,20 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
                             padding: const EdgeInsets.only(bottom: 4),
                             child: Text(CareerSystem.nextStageHint(s),
                                 style: const TextStyle(
-                                    color: Colors.white70, fontSize: 12)),
+                                    color: Palette.inkSoft, fontSize: 12)),
                           ),
                         _sectionHeader('Legacy'),
                         Row(children: [
                           Text('Eredità ${s.prestige.legacy}',
                               style: const TextStyle(
-                                  color: Color(0xE6FFD75E),
+                                  color: Palette.accent,
                                   fontSize: 14,
                                   fontWeight: FontWeight.bold)),
                           const Spacer(),
                           Text(
                               '+${((const PrestigeService().productionMultiplier(s) - 1) * 100).toStringAsFixed(0)}% production',
                               style: const TextStyle(
-                                  color: Colors.white70, fontSize: 12)),
+                                  color: Palette.inkSoft, fontSize: 12)),
                         ]),
                         ShopCard(
                           name: 'Prestige',
@@ -456,7 +454,7 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
                           child: Text(
                               'Formulate in completed fields, fund work sessions, roll at 100%. Failing teaches Metodo — and half the progress survives. Max 2 active discoveries.',
                               style:
-                                  TextStyle(color: Colors.white70, fontSize: 12, height: 1.5)),
+                                  TextStyle(color: Palette.inkSoft, fontSize: 12, height: 1.5)),
                         ),
                         for (final def in conjecturesByTier())
                           _conjectureRow(def),
@@ -466,7 +464,7 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
                           padding: EdgeInsets.only(bottom: 8),
                           child: Text(
                               'Focus a subject: every accepted paper masters one theorem inside it. Mastering a field activates its effect and unlocks the fields that build on it.',
-                              style: TextStyle(color: Colors.white70, fontSize: 12, height: 1.5)),
+                              style: TextStyle(color: Palette.inkSoft, fontSize: 12, height: 1.5)),
                         ),
                         for (final def in subjectsByLevel())
                           _subjectRow(def, services, s),
@@ -484,7 +482,7 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
                 child: FilledButton.icon(
                   onPressed: () => ref.read(gameStateProvider.notifier).solveExercise(),
                   style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFF9CCC65),
+                    backgroundColor: Palette.action,
                     foregroundColor: Colors.black,
                     minimumSize: const Size(0, 48),
                     textStyle:
@@ -499,8 +497,8 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
               OutlinedButton.icon(
                 onPressed: () => setState(() => _shopOpen = !_shopOpen),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
+                  foregroundColor: Palette.ink,
+                  side: BorderSide(color: Palette.border),
                   minimumSize: const Size(110, 48),
                 ),
                 icon: const Icon(Icons.storefront_outlined),
@@ -567,16 +565,16 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
     late final Color statusColor;
     if (done) {
       status = 'Mastered';
-      statusColor = _gold;
+      statusColor = Palette.accent;
     } else if (!unlocked) {
       status = 'Locked — needs $missing';
-      statusColor = Colors.white38;
+      statusColor = Palette.inkFaint;
     } else if (focused) {
       status = 'Focused — $mastered/$need theorems';
-      statusColor = _gold;
+      statusColor = Palette.accent;
     } else {
       status = '$mastered/$need theorems';
-      statusColor = Colors.white70;
+      statusColor = Palette.inkSoft;
     }
     final enabled = unlocked && !done;
     return Container(
@@ -586,7 +584,7 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
             color:
-                focused ? _gold.withValues(alpha: 0.8) : Colors.white.withValues(alpha: 0.12)),
+                focused ? Palette.accent.withValues(alpha: 0.8) : Palette.border),
       ),
       child: Material(
         color: Colors.transparent,
@@ -612,12 +610,12 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(def.name,
                     style: TextStyle(
-                        color: unlocked || done ? Colors.white : Colors.white54,
+                        color: unlocked || done ? Palette.ink : Palette.inkSoft,
                         fontSize: 14,
                         fontWeight: FontWeight.w600)),
                 const SizedBox(height: 2),
                 Text(def.effectText,
-                    style: const TextStyle(color: Colors.white54, fontSize: 12)),
+                    style: const TextStyle(color: Palette.inkSoft, fontSize: 12)),
               ])),
               Text(status, style: TextStyle(color: statusColor, fontSize: 12)),
             ]),
@@ -641,23 +639,23 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
     late final Color statusColor;
     if (proven) {
       statusText = 'Proven · ${def.rewardSummary}';
-      statusColor = _gold;
+      statusColor = Palette.accent;
     } else if (cooling) {
       statusText =
           'Refuted · retry in ${_fmtCooldown(st!.readyAt!)} (${st.progress.toStringAsFixed(0)}% kept)';
-      statusColor = Colors.white70;
+      statusColor = Palette.inkSoft;
     } else if (active) {
       statusText = '${st!.progress.toStringAsFixed(0)}% done';
-      statusColor = _gold;
+      statusColor = Palette.accent;
     } else if (careerLocked) {
       statusText = 'Unlocks at Postdoc';
-      statusColor = Colors.white38;
+      statusColor = Palette.inkFaint;
     } else if (missing.isNotEmpty) {
       statusText = 'Needs: ${missing.map((id) => subjectCatalog[id]?.name ?? id).join(', ')}';
-      statusColor = Colors.white38;
+      statusColor = Palette.inkFaint;
     } else {
       statusText = '';
-      statusColor = Colors.white70;
+      statusColor = Palette.inkSoft;
     }
 
     final branches = def.subjects
@@ -684,8 +682,8 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
             color: proven
-                ? _gold.withValues(alpha: 0.8)
-                : Colors.white.withValues(alpha: 0.12)),
+                ? Palette.accent.withValues(alpha: 0.8)
+                : Palette.border),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -705,12 +703,12 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(def.name,
                   style: const TextStyle(
-                      color: Colors.white,
+                      color: Palette.ink,
                       fontSize: 14,
                       fontWeight: FontWeight.w600)),
               const SizedBox(height: 2),
               Text(subLine,
-                  style: const TextStyle(color: Colors.white54, fontSize: 12)),
+                  style: const TextStyle(color: Palette.inkSoft, fontSize: 12)),
             ])),
             Flexible(
                 child: Text(statusText,
@@ -724,9 +722,9 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
               child: LinearProgressIndicator(
                   value: st.progress / 100,
                   minHeight: 6,
-                  backgroundColor: Colors.white.withValues(alpha: 0.1),
+                  backgroundColor: Palette.surfaceAlt,
                   valueColor:
-                      const AlwaysStoppedAnimation<Color>(Color(0xFF9CCC65))),
+                      const AlwaysStoppedAnimation<Color>(Palette.action)),
             ),
             const SizedBox(height: 8),
             Align(
@@ -740,7 +738,7 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
                         : null,
                     style: OutlinedButton.styleFrom(
                         minimumSize: const Size(0, 34),
-                        foregroundColor: Colors.white),
+                        foregroundColor: Palette.ink),
                     icon: const Icon(Icons.play_arrow, size: 18),
                     label: Text('Work session ($workCost)'))),
           ],
@@ -757,7 +755,7 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
                         ? () => n.formulateConjecture(def.id)
                         : null,
                     style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFF9CCC65),
+                        backgroundColor: Palette.action,
                         foregroundColor: Colors.black,
                         minimumSize: const Size(0, 34)),
                     icon: const Icon(Icons.add_circle_outline, size: 18),
@@ -790,7 +788,7 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
         padding: const EdgeInsets.only(top: 12, bottom: 6),
         child: Text(title.toUpperCase(),
             style: const TextStyle(
-                color: Color(0xFF9CCC65), fontSize: 12, letterSpacing: 1.2)),
+                color: Palette.action, fontSize: 12, letterSpacing: 1.2)),
       );
 }
 
@@ -807,21 +805,21 @@ class _AwayBanner extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.4),
+        color: Palette.surfaceAlt,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: _gold.withValues(alpha: 0.5)),
+        border: Border.all(color: Palette.accent.withValues(alpha: 0.5)),
       ),
       child: Row(children: [
-        const Icon(Icons.hourglass_empty, size: 16, color: _gold),
+        const Icon(Icons.hourglass_empty, size: 16, color: Palette.accent),
         const SizedBox(width: 8),
         Expanded(
             child: Text(
                 'While you were away: +${formatNumber(report.gained.counting)} C \u00b7 +${formatNumber(report.gained.proofing)} P \u00b7 +${formatNumber(report.gained.fame)} F',
                 style:
-                    const TextStyle(color: Colors.white, fontSize: 13))),
+                    const TextStyle(color: Palette.ink, fontSize: 13))),
         IconButton(
             onPressed: onDismiss,
-            icon: const Icon(Icons.close, size: 16, color: Colors.white70)),
+            icon: const Icon(Icons.close, size: 16, color: Palette.inkSoft)),
       ]),
     );
   }
@@ -842,14 +840,14 @@ class _TabButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
-          color: selected ? _gold.withValues(alpha: 0.18) : Colors.transparent,
+          color: selected ? Palette.accent.withValues(alpha: 0.18) : Colors.transparent,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-              color: selected ? _gold.withValues(alpha: 0.6) : Colors.white.withValues(alpha: 0.2)),
+              color: selected ? Palette.accent.withValues(alpha: 0.6) : Palette.ink.withValues(alpha: 0.2)),
         ),
         child: Text(label,
             style: TextStyle(
-                color: selected ? _gold : Colors.white70,
+                color: selected ? Palette.accent : Palette.inkSoft,
                 fontSize: 12,
                 fontWeight: FontWeight.bold)),
       ),
@@ -892,7 +890,7 @@ class _NameEntryPanelState extends ConsumerState<_NameEntryPanel> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.black.withValues(alpha: 0.72),
+      color: Palette.scrim,
       alignment: Alignment.center,
       child: Center(
         child: Material(
@@ -902,21 +900,21 @@ class _NameEntryPanelState extends ConsumerState<_NameEntryPanel> {
             padding: const EdgeInsets.all(24),
             constraints: const BoxConstraints(maxWidth: 420),
             decoration: BoxDecoration(
-              color: const Color(0xF21E2B28),
+              color: Palette.surface,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: _gold.withValues(alpha: 0.5)),
+              border: Border.all(color: Palette.accent.withValues(alpha: 0.5)),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  const Icon(Icons.badge_outlined, color: _gold, size: 28),
+                  const Icon(Icons.badge_outlined, color: Palette.accent, size: 28),
                   const SizedBox(width: 10),
                   Flexible(
                       child: Text('A new career begins',
                           style: TextStyle(
-                              color: _gold,
+                              color: Palette.accent,
                               fontSize: 20,
                               fontStyle: FontStyle.italic,
                               fontFamily: 'serif')))
@@ -925,7 +923,7 @@ class _NameEntryPanelState extends ConsumerState<_NameEntryPanel> {
                 const Text(
                     'Every great mathematician starts with a name.\nWhat shall your colleagues call you?',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.white70, fontSize: 13, height: 1.5)),
+                    style: TextStyle(color: Palette.inkSoft, fontSize: 13, height: 1.5)),
                 const SizedBox(height: 16),
                 Row(children: [
                   Expanded(
@@ -938,7 +936,7 @@ class _NameEntryPanelState extends ConsumerState<_NameEntryPanel> {
                         hintText: 'e.g. Ada Lovelace',
                         counterText: '',
                         filled: true,
-                        fillColor: Colors.black.withValues(alpha: 0.3),
+                        fillColor: Palette.surface,
                         border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10)),
                       ),
@@ -948,14 +946,14 @@ class _NameEntryPanelState extends ConsumerState<_NameEntryPanel> {
                   IconButton(
                     onPressed: _randomize,
                     tooltip: 'Roll a famous first name',
-                    icon: const Icon(Icons.casino, color: Colors.white70),
+                    icon: const Icon(Icons.casino, color: Palette.inkSoft),
                   ),
                 ]),
                 const SizedBox(height: 16),
                 FilledButton(
                   onPressed: () => _confirm(),
                   style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFF9CCC65),
+                    backgroundColor: Palette.action,
                     foregroundColor: Colors.black,
                     minimumSize: const Size(0, 48),
                     textStyle:
