@@ -45,6 +45,12 @@ String? onboardingHint(GameState s) {
     return 'Learn Elementary formalization in the shop to start producing Proofing.';
   }
   if (s.papersInRun == 0 && s.activePapers.isEmpty) {
+    // The No-Paper Run closes the publication desk (§7): manual solves
+    // earn Fame directly instead.
+    if (const ChallengeService().blocksNewPapers(s)) {
+      return 'While the No-Paper Run is active, every solved exercise earns '
+          '+${ChallengeService.clickFameNoPaper.toStringAsFixed(0)} Fame directly.';
+    }
     return 'Publish your first paper in the shop to earn Fame.';
   }
   return null;

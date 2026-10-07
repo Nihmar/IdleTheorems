@@ -218,6 +218,27 @@ void main() {
     expect(find.text('Constructivist Run'), findsOneWidget);
   });
 
+  testWidgets('onboarding hint adapts to the No-Paper Run', (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    final notifier = container.read(gameStateProvider.notifier);
+    notifier.bootstrap(
+      GameState()
+        ..playerName = 'Blaise'
+        ..stats.totalClicks = 1
+        ..producerLevels['guided_exercises'] = 1
+        ..techniques.add('elementary_formalization'),
+    );
+    notifier.enterChallenge('no_paper_run');
+
+    await tester.pumpWidget(wrap(container));
+
+    expect(
+      find.textContaining('every solved exercise earns +5 Fame'),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('laboratory stays sealed below Professor', (tester) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);
