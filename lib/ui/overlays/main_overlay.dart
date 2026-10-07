@@ -692,15 +692,18 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
     int busy,
   ) {
     final s = ref.watch(gameStateProvider);
+    final closed = const ChallengeService().blocksNewPapers(s);
     final allBusy = busy >= maxSlots;
     final cost = balance.paperCost(s.papersInRun) * discount;
     return ShopCard(
       name: 'Publish paper ($busy/$maxSlots slots)',
-      description: allBusy
+      description: closed
+          ? 'Closed while the No-Paper Run challenge is active.'
+          : allBusy
           ? 'All writing slots are busy — wait for a review outcome.'
           : '~60s writing, then peer review. Fame on acceptance.',
       costLabel: formatCost(cost, ResourceKind.proofing),
-      canAfford: !allBusy && s.resources.canAfford(0, cost),
+      canAfford: !closed && !allBusy && s.resources.canAfford(0, cost),
       onBuy: () => ref.read(gameStateProvider.notifier).startPaper(),
     );
   }
