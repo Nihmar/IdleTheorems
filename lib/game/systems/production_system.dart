@@ -1,5 +1,6 @@
 import '../../domain/models/game_state.dart';
 import '../../domain/models/producers.dart';
+import '../../domain/services/balance_service.dart';
 import '../../domain/services/subject_service.dart';
 import 'apprentice_service.dart';
 import 'challenge_service.dart';
@@ -42,6 +43,21 @@ class ProductionSystem {
       if (t != null) m *= t.proofingMultiplier;
     }
     return m;
+  }
+
+  /// Effective Counting gained by one manual exercise solve (§13.2):
+  /// study tools × subject click & global mults × conjecture counting/global
+  /// boosts × completed-challenge boost × lifetime Legacy bonus. Single
+  /// source of truth shared by `solveExercise()` and the Solve button.
+  double clickPower(GameState s, [SubjectModifiers? mods]) {
+    final m = mods ?? const SubjectService().modifiers(s);
+    return const BalanceService().clickPower(s.levelOf('study_tools')) *
+        m.clickMultiplier *
+        m.globalResourceMult *
+        s.conjectureCountingMult *
+        s.conjectureGlobalMult *
+        s.challengeGlobalMult *
+        const PrestigeService().productionMultiplier(s);
   }
 
   ProductionRates compute(GameState s, [SubjectModifiers? mods]) {
