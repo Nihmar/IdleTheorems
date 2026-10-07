@@ -229,5 +229,12 @@ void main() {
       s.lifetime['fame'] = 1e6;
       expect(notifier.legacyGainNow, 100);
     });
+
+    test('Algebraic Topology and Cryptography bonuses multiply together', () {
+      final s = container.read(gameStateProvider);
+      s.branches['algebraic_topology'] = BranchProgress(completed: true);
+      s.branches['cryptography'] = BranchProgress(completed: true);
+      expect(notifier.prestigeLegacyFactor(), closeTo(1.25 * 1.10, 1e-9));
+    });
   });
 }
