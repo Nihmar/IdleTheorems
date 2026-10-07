@@ -58,6 +58,24 @@ class GameStateNotifier extends Notifier<GameState> {
   /// Re-assigning the same instance triggers the notification pipeline.
   void _refresh() => state = state;
 
+  /// Minimum interval between tick-driven refreshes: an idle game's HUD is
+  /// fine updating ~4 times per second. Discrete actions always refresh
+  /// immediately through [_afterMutation].
+  static const Duration _minTickRefreshInterval = Duration(milliseconds: 250);
+
+  DateTime _lastTickRefresh = DateTime.fromMillisecondsSinceEpoch(0);
+
+  /// Refresh driven by [tick]: at most once every [_minTickRefreshInterval],
+  /// unless something discrete changed during this frame ([force]).
+  void _tickRefresh({required bool force}) {
+    final now = DateTime.now();
+    if (!force && now.difference(_lastTickRefresh) < _minTickRefreshInterval) {
+      return;
+    }
+    _lastTickRefresh = now;
+    _refresh();
+  }
+
   /// Wires the persistence hook set up by main() after Hive init.
   void setSaveHook(VoidCallback saveNow) => _saveHook = saveNow;
 
@@ -310,7 +328,32 @@ class GameStateNotifier extends Notifier<GameState> {
   }
 
   /// Per-frame tick: passive production, paper pipeline, frictions, gates.
+  /// Snapshot of the display-relevant discrete values. Comparing two
+  /// snapshots tells whether a tick produced a meaningful change (paper
+  /// outcomes, notices, burnout, trends, career...). Continuous resource
+  /// accumulation is intentionally excluded: time-based refreshes cover it.
+  List<Object?> _discreteSignature(GameState s) => [
+    s.stats.totalClicks,
+    s.stats.papersPublished,
+    s.stats.papersRejected,
+    s.stats.retractions,
+    s.stats.conjecturesSolved,
+    s.metodoLevel,
+    s.career.stage.index,
+    s.career.apprentices,
+    s.trend.activeSubject,
+    s.trend.nextSubject,
+    s.burnedOutUntil?.millisecondsSinceEpoch ?? -1,
+    s.papersInRun,
+    s.papersPublishedInRun,
+    s.activePapers.length,
+    for (final job in s.activePapers) job.awaitingRewrite,
+    for (final c in s.conjectures) '${c.defId}:${c.status.name}',
+    s.transientNotice,
+  ];
+
   void tick(double dt) {
+    final before = _discreteSignature(state);
     _production.tick(state, dt, _subjects.modifiers(state));
     _advancePapers(dt);
     final retractionsBefore = state.stats.retractions;
@@ -327,7 +370,17 @@ class GameStateNotifier extends Notifier<GameState> {
     _trend.update(state);
     _conjectures.update(state);
     _career.update(state);
-    _refresh();
+    _tickRefresh(force: !_sameSignature(before, _discreteSignature(state)));
+  }
+
+  /// Element-wise comparison of discrete signatures (all entries are plain
+  /// equatables).
+  static bool _sameSignature(List<Object?> a, List<Object?> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
   }
 
   // ------------------------------------------------------- research focus

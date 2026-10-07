@@ -2,7 +2,6 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:katex/katex.dart';
 
 import '../../domain/models/career.dart';
 import '../../domain/models/conjecture.dart';
@@ -25,18 +24,9 @@ import '../../game/systems/production_system.dart';
 import '../../providers/game_state_provider.dart';
 import '../../utils/number_format.dart';
 import '../theme/palette.dart';
+import '../widgets/chalk_formula_layer.dart';
 import '../widgets/resource_counter.dart';
 import '../widgets/shop_card.dart';
-
-/// Chalk formulas scribbled on the board, rendered with real KaTeX.
-const List<(String, double, double)> _chalkFormulas = [
-  (r'\int_0^\infty e^{-x^2}\,dx = \sqrt{\pi}', 0.08, 0.30),
-  (r'a^{2} + b^{2} = c^{2}', 0.66, 0.27),
-  (r'P(A \mid B) = \frac{P(B \mid A)\,P(A)}{P(B)}', 0.25, 0.52),
-  (r'\zeta(s) = \sum_{n=1}^{\infty} n^{-s}', 0.68, 0.55),
-  (r'e^{i\pi} + 1 = 0', 0.10, 0.78),
-  (r'F = m \cdot a', 0.58, 0.80),
-];
 
 /// Derives the current guided hint for "The first semester" onboarding
 /// (plan section 8). Stateless: progress is read from game state directly.
@@ -108,17 +98,12 @@ class MainOverlay extends ConsumerWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final w = constraints.maxWidth;
         final h = constraints.maxHeight;
         return Stack(
           children: [
-            // Decorative chalk formulas (real TeX).
-            for (final (tex, fx, fy) in _chalkFormulas)
-              Positioned(
-                left: fx * w,
-                top: fy * h,
-                child: Math(tex, color: Palette.ink, fontSize: 17),
-              ),
+            // Decorative chalk formulas (real TeX): const subtree, never
+            // rebuilt by HUD updates.
+            const Positioned.fill(child: ChalkFormulaLayer()),
             // Top HUD.
             Positioned(
               left: 0,

@@ -280,4 +280,40 @@ void main() {
       expect(notifier.prestigeLegacyFactor(), closeTo(1.25 * 1.10, 1e-9));
     });
   });
+
+  group('tick refresh throttling (#16)', () {
+    test('repeated ticks within the window notify only once', () {
+      var updates = 0;
+      container.listen(gameStateProvider, (_, _) => updates++);
+      notifier.tick(1);
+      expect(updates, 1);
+      notifier.tick(1);
+      notifier.tick(1);
+      expect(updates, 1);
+    });
+
+    test('discrete changes inside a tick bypass the throttle', () {
+      var updates = 0;
+      container.listen(gameStateProvider, (_, _) => updates++);
+      notifier.tick(1);
+      expect(updates, 1);
+      // An expired notice will be cleared by the next tick: signature
+      // changed, so the refresh must not wait for the interval.
+      notifier.state.transientNotice = 'old notice';
+      notifier.state.transientNoticeUntil = DateTime.now().subtract(
+        const Duration(seconds: 9),
+      );
+      notifier.tick(1);
+      expect(notifier.state.transientNotice, isNull);
+      expect(updates, 2);
+    });
+
+    test('mutations still refresh immediately', () {
+      var updates = 0;
+      container.listen(gameStateProvider, (_, _) => updates++);
+      notifier.solveExercise();
+      notifier.solveExercise();
+      expect(updates, 2);
+    });
+  });
 }
