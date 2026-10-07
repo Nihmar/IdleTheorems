@@ -645,7 +645,7 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
                     ),
                     icon: const Icon(Icons.edit_note),
                     label: Text(
-                      'Solve exercise (+${formatNumber(balance.clickPower(s.levelOf('study_tools')) * mods.clickMultiplier * mods.globalResourceMult)})',
+                      'Solve exercise (+${formatNumber(const ProductionSystem().clickPower(s))})',
                     ),
                   ),
                 ),

@@ -118,13 +118,7 @@ class GameStateNotifier extends Notifier<GameState> {
 
   /// One manual exercise solve (the idle "click").
   void solveExercise() {
-    final m = _subjects.modifiers(state);
-    final power =
-        _balance.clickPower(state.levelOf('study_tools')) *
-        m.clickMultiplier *
-        m.globalResourceMult *
-        state.conjectureCountingMult *
-        state.conjectureGlobalMult;
+    final power = const ProductionSystem().clickPower(state);
     state.gain(power);
     // No-Paper Run: every solved exercise also earns Fame directly (§7).
     final clickFame = _challenges.clickFame(state);

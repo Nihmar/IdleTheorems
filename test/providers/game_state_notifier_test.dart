@@ -35,6 +35,16 @@ void main() {
     expect(after.stats.totalClicks, 1);
   });
 
+  test('solveExercise pays the unified click power including all boosts', () {
+    notifier.state.prestige.legacyAllTime = 5;
+    notifier.state.challengeGlobalMult = 1.05;
+    notifier.state.conjectureCountingMult = 1.25;
+    final expected = const ProductionSystem().clickPower(notifier.state);
+    final before = notifier.state.resources.counting;
+    notifier.solveExercise();
+    expect(notifier.state.resources.counting - before, closeTo(expected, 1e-9));
+  });
+
   test('buyProducer spends currency and levels up, triggering a save', () {
     final def = producerCatalog['guided_exercises']!;
     final cost = const BalanceService().producerCost(def, 0);
