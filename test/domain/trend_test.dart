@@ -38,12 +38,29 @@ void main() {
     test('long absences resync instead of replaying missed slots', () {
       final s = GameState();
       trend.update(s);
-      s.trend.endsAt = DateTime.now().subtract(const Duration(days: 5));
+      // A save written ~5 days ago carries both timestamps in the past
+      // (_assignNext keeps nextStartsAt == endsAt).
+      final past = DateTime.now().subtract(const Duration(days: 5));
+      s.trend.endsAt = past;
+      s.trend.nextStartsAt = past;
       trend.update(s);
+      expect(trend.isActive(s), isTrue);
       expect(s.trend.endsAt!.isAfter(DateTime.now()), isTrue);
       // The resynced window must not exceed one full rotation.
       expect(s.trend.endsAt!.difference(DateTime.now()).inHours,
           lessThanOrEqualTo(TrendService.rotation.inHours + 1));
+    });
+
+    test('a single missed window honours its scheduled boundary', () {
+      final s = GameState();
+      trend.update(s);
+      final announced = s.trend.nextSubject;
+      final boundary = DateTime.now().subtract(const Duration(hours: 12));
+      s.trend.endsAt = boundary;
+      s.trend.nextStartsAt = boundary;
+      trend.update(s);
+      expect(s.trend.activeSubject, announced);
+      expect(s.trend.endsAt, boundary.add(TrendService.rotation));
     });
   });
 
