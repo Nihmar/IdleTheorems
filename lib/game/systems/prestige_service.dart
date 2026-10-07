@@ -103,9 +103,10 @@ class PrestigeService {
 
   /// Reboots the run. Persists: Legacy bank, mathematicians, Metodo level,
   /// proven conjectures (and their multipliers), cosmetics, stats, name.
-  void applyPrestige(GameState s) {
+  /// [legacyFactor] scales the conversion (Encrypted Run, section 7).
+  void applyPrestige(GameState s, [double legacyFactor = 1]) {
     if (!canPrestige(s)) return;
-    final gain = legacyGain(s);
+    final gain = (legacyGain(s) * legacyFactor).round();
     s.prestige.legacy += gain;
     s.prestige.legacyAllTime += gain;
     s.prestige.prestigesCount++;

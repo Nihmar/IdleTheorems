@@ -16,6 +16,7 @@ import '../../domain/services/offline_service.dart';
 import '../../domain/services/subject_service.dart';
 import '../../game/systems/apprentice_service.dart';
 import '../../game/systems/career_system.dart';
+import '../../game/systems/challenge_service.dart';
 import '../../game/systems/conjecture_system.dart';
 import '../../game/systems/friction_system.dart';
 import '../../game/systems/prestige_service.dart';
@@ -203,7 +204,8 @@ class MainOverlay extends ConsumerWidget {
                       ],
                       if (s.transientNotice != null ||
                           const FrictionSystem().isBurnedOut(s) ||
-                          s.stress > 0.1) ...
+                          s.stress > 0.1 ||
+                          s.activeChallenge.isNotEmpty) ...
                       [
                         const SizedBox(height: 8),
                         Row(children: [
@@ -214,6 +216,11 @@ class MainOverlay extends ConsumerWidget {
                             _Chip(
                                 label: 'Stressed ${(s.stress * 100).round()}%',
                                 icon: Icons.sentiment_dissatisfied),
+                          if (s.activeChallenge.isNotEmpty)
+                            _Chip(
+                                label: ChallengeService.catalog[s.activeChallenge]!
+                                    .name,
+                                icon: Icons.verified_outlined),
                           if (s.transientNotice != null)
                             Expanded(
                                 child:
@@ -431,6 +438,9 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
                           _upgradeRow(u, mods.upgradeCostFactor),
                         _sectionHeader('Laboratory'),
                         _laboratoryRow(s),
+                        _sectionHeader('Challenges'),
+                        for (final def in ChallengeService.catalog.values)
+                          _challengeCard(def, s),
                         _sectionHeader('Publication desk'),
                         _paperDeskRow(balance, mods.paperCostFactor, maxSlots, papersInProgress),
                         if (CareerSystem().canDefendThesis(s))
@@ -820,6 +830,46 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
       canAfford: s.resources.canAfford(
           next.costCounting, next.costProofing, next.costFame),
       onBuy: () => ref.read(gameStateProvider.notifier).hireApprentice(),
+    );
+  }
+
+  /// One optional rule modifier for the current run (section 7).
+  Widget _challengeCard(ChallengeDef def, GameState s) {
+    final svc = const ChallengeService();
+    final n = ref.read(gameStateProvider.notifier);
+    final completed = s.completedChallenges.contains(def.id);
+    final locked = !svc.unlocked(s, def.id);
+    final active = s.activeChallenge == def.id;
+
+    late final String costLabel;
+    late final bool canAfford;
+    late final VoidCallback buy;
+    if (active) {
+      costLabel = 'Abandon';
+      canAfford = true;
+      buy = () => n.abandonChallenge();
+    } else if (completed) {
+      costLabel = 'Completed';
+      canAfford = false;
+      buy = () {};
+    } else if (locked) {
+      costLabel = 'Locked';
+      canAfford = false;
+      buy = () {};
+    } else {
+      costLabel = 'Enter';
+      canAfford = true;
+      buy = () => n.enterChallenge(def.id);
+    }
+
+    return ShopCard(
+      name: def.name,
+      description: '${def.description} Reward: ${def.rewardSummary}.',
+      costLabel: costLabel,
+      canAfford: canAfford,
+      onBuy: buy,
+      lockedReason:
+          locked && !completed ? 'Unlocks after completing Cryptography' : null,
     );
   }
 

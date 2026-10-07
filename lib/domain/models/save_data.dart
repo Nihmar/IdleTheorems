@@ -196,6 +196,12 @@ class SaveData {
   /// Cosmetic titles earned by proving open problems (§3 endgame);
   /// persists across prestiges.
   List<String> titles;
+  /// Active optional challenge id ('' = none); additive field (§7).
+  String activeChallenge;
+  /// Challenges already completed this account; additive field.
+  List<String> completedChallenges;
+  /// Permanent production boost from completed challenges; additive.
+  double challengeGlobalMult;
   Settings settings;
   Stats stats;
 
@@ -225,6 +231,9 @@ class SaveData {
     required this.metodoXp,
     required this.papersInRun,
     this.titles = const [],
+    this.activeChallenge = '',
+    this.completedChallenges = const [],
+    this.challengeGlobalMult = 1,
     required this.settings,
     required this.stats,
   });
@@ -288,6 +297,9 @@ class SaveData {
         'metodo_xp': metodoXp,
         'papers_in_run': papersInRun,
         'titles': titles,
+        'active_challenge': activeChallenge,
+        'completed_challenges': completedChallenges,
+        'challenge_global_mult': challengeGlobalMult,
         'settings': settings.toJson(),
         'stats': stats.toJson(),
       };
@@ -340,6 +352,12 @@ class SaveData {
       titles: (raw['titles'] as List<dynamic>? ?? const [])
           .map((e) => e.toString())
           .toList(),
+      activeChallenge: raw['active_challenge'] as String? ?? '',
+      completedChallenges:
+          (raw['completed_challenges'] as List<dynamic>? ?? const [])
+              .map((e) => e.toString())
+              .toList(),
+      challengeGlobalMult: (raw['challenge_global_mult'] as num?)?.toDouble() ?? 1,
       settings: Settings.fromJson(raw['settings'] as Map<String, dynamic>),
       stats: Stats.fromJson(raw['stats'] as Map<String, dynamic>),
     );

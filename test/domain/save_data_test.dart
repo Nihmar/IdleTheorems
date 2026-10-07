@@ -12,6 +12,9 @@ void main() {
       original.metodoLevel = 4;
       original.papersInRun = 2;
       original.titles = ['Prime Summarizer', 'Zero Hunter'];
+      original.activeChallenge = 'constructivist_run';
+      original.completedChallenges = ['no_paper_run'];
+      original.challengeGlobalMult = 1.05;
       original.techniques.add('elementary_formalization');
       original.producerLevels['guided_exercises'] = 3;
 
@@ -28,6 +31,9 @@ void main() {
       expect(restored.metodoLevel, 4);
       expect(restored.papersInRun, 2);
       expect(restored.titles, equals(['Prime Summarizer', 'Zero Hunter']));
+      expect(restored.activeChallenge, 'constructivist_run');
+      expect(restored.completedChallenges, equals(['no_paper_run']));
+      expect(restored.challengeGlobalMult, closeTo(1.05, 1e-9));
       expect(restored.techniques, contains('elementary_formalization'));
       expect(restored.producerLevels['guided_exercises'], 3);
     });

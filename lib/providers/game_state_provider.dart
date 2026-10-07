@@ -13,6 +13,7 @@ import '../domain/services/offline_service.dart';
 import '../domain/services/subject_service.dart';
 import '../game/systems/apprentice_service.dart';
 import '../game/systems/career_system.dart';
+import '../game/systems/challenge_service.dart';
 import '../game/systems/conjecture_system.dart';
 import '../game/systems/friction_system.dart';
 import '../game/systems/prestige_service.dart';
@@ -34,6 +35,7 @@ class GameStateNotifier extends Notifier<GameState> {
   final ConjectureSystem _conjectures = ConjectureSystem();
   final FrictionSystem _friction = const FrictionSystem();
   final ApprenticeService _apprentices = const ApprenticeService();
+  final ChallengeService _challenges = const ChallengeService();
   final TrendService _trend = const TrendService();
   final PrestigeService _prestige = const PrestigeService();
   final Random _rng = Random();
@@ -110,6 +112,9 @@ class GameStateNotifier extends Notifier<GameState> {
         m.clickMultiplier * m.globalResourceMult *
         state.conjectureCountingMult * state.conjectureGlobalMult;
     state.gain(power);
+    // No-Paper Run: every solved exercise also earns Fame directly (§7).
+    final clickFame = _challenges.clickFame(state);
+    if (clickFame > 0) state.gain(0, 0, clickFame);
     state.stats.totalClicks++;
     _refresh();
   }
@@ -152,6 +157,8 @@ class GameStateNotifier extends Notifier<GameState> {
 
   /// Starts writing the next paper (cost scales with papers started this run).
   bool startPaper() {
+    // No-Paper Run closes the publication desk (section 7).
+    if (_challenges.blocksNewPapers(state)) return false;
     final m = _subjects.modifiers(state);
     if (state.activePapers.length >= _subjects.maxConcurrentPapers(state)) {
       return false; // all slots busy
@@ -190,14 +197,42 @@ class GameStateNotifier extends Notifier<GameState> {
 
   // ------------------------------------------------------------ prestige
 
-  int get legacyGainNow => _prestige.legacyGain(state);
+  int get legacyGainNow =>
+      (_prestige.legacyGain(state) * _challenges.prestigeLegacyFactor(state)).round();
 
-  /// Reboots the run into Legacy points (sections 6 and 13.9).
+  /// Reboots the run into Legacy points (sections 6 and 13.9). Completes
+  /// any active challenge on the way out (section 7).
   bool prestige() {
     if (!_prestige.canPrestige(state)) return false;
-    final gain = _prestige.legacyGain(state);
-    _prestige.applyPrestige(state);
-    _notice('+$gain Eredità — a new chapter begins.');
+    final factor = _challenges.prestigeLegacyFactor(state);
+    final gain = (_prestige.legacyGain(state) * factor).round();
+    _prestige.applyPrestige(state, factor);
+    var message = '+$gain Eredità — a new chapter begins.';
+    final completed = _challenges.completeAtPrestige(state);
+    if (completed != null) {
+      message += ' ${completed.name} complete!';
+    }
+    _notice(message);
+    _afterMutation();
+    return true;
+  }
+
+  // ---------------------------------------------------------- challenges
+
+  /// Starts an optional challenge for this run (section 7).
+  bool enterChallenge(String id) {
+    if (!_challenges.enter(state, id)) return false;
+    final d = _challenges.def(id)!;
+    _notice('${d.name} accepted. It completes when you prestige.');
+    _afterMutation();
+    return true;
+  }
+
+  /// Gives up on the active challenge without its reward.
+  bool abandonChallenge() {
+    if (state.activeChallenge.isEmpty) return false;
+    _challenges.abandon(state);
+    _notice('You set the challenge aside.');
     _afterMutation();
     return true;
   }
@@ -338,6 +373,8 @@ class GameStateNotifier extends Notifier<GameState> {
           afterRevision: job.revisionBonus,
         );
         fame *= mods.famePerPaperMult;
+        // Constructivist Run: hand-written results carry double weight (§7).
+        fame *= _challenges.paperFameFactor(state);
         // Papers earn half Fame until the thesis is defended (section 5).
         fame *= CareerSystem.paperFameFactor(state.career);
         // Focusing the trending field doubles paper Fame (sections 3/13.10).
