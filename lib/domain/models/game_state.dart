@@ -47,6 +47,12 @@ class GameState {
   int papersInRun = 0;
   /// Cosmetic titles earned by proving open problems (§3 endgame).
   List<String> titles = [];
+  /// Active optional challenge id ('' = none) — section 7.
+  String activeChallenge = '';
+  /// Challenges already completed; each pays out once.
+  List<String> completedChallenges = [];
+  /// Permanent production boost from completed challenges.
+  double challengeGlobalMult = 1;
   /// Transient: active writing jobs. Rebuilt from nothing on load.
   List<PaperJob> activePapers = [];
   Settings settings = Settings();
@@ -110,6 +116,9 @@ class GameState {
       metodoXp: metodoXp,
       papersInRun: papersInRun,
       titles: List.of(titles),
+      activeChallenge: activeChallenge,
+      completedChallenges: List.of(completedChallenges),
+      challengeGlobalMult: challengeGlobalMult,
       settings: Settings(
         theme: settings.theme,
         sound: settings.sound,
@@ -166,6 +175,9 @@ class GameState {
       ..metodoXp = save.metodoXp
       ..papersInRun = save.papersInRun
       ..titles = List.of(save.titles)
+      ..activeChallenge = save.activeChallenge
+      ..completedChallenges = List.of(save.completedChallenges)
+      ..challengeGlobalMult = save.challengeGlobalMult
       ..settings = Settings(
           theme: save.settings.theme,
           sound: save.settings.sound,

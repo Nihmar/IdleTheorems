@@ -31,11 +31,11 @@ gh issue create              # report an issue
 
 Do not use raw HTTPS calls or the web UI; prefer `gh` commands.
 
-## Pending UI work
+## Theme
 
-- **Color palette rework (requested):** light theme — white / paper-tinted
-  background, dark-but-not-pure-black text, gold accent highlights.
-  Replaces the current dark chalkboard look once the core loop stabilizes.
+- The light paper-and-ink palette lives in `lib/ui/theme/palette.dart`
+  (paper background, ink text, gold accents). Use its constants everywhere;
+  never hardcode raw colors in widgets.
 
 ## Code quality
 

@@ -2,6 +2,7 @@ import '../../domain/models/game_state.dart';
 import '../../domain/models/producers.dart';
 import '../../domain/services/subject_service.dart';
 import 'apprentice_service.dart';
+import 'challenge_service.dart';
 import 'friction_system.dart';
 import 'prestige_service.dart';
 
@@ -49,6 +50,8 @@ class ProductionSystem {
     }
     // Apprentices: narrated automation adding flat Counting (section 5).
     c += const ApprenticeService().outputOf(s.career.apprentices);
+    // Constructivist Run: the lab runs lean (section 7).
+    c *= const ChallengeService().passiveProductionFactor(s);
     c *= countingMultiplier(s);
     c = c * m.countingMultiplier + m.countingRateAdd;
     // Gauss: Counting ×2 (prestige perk, section 13.9).
@@ -63,7 +66,8 @@ class ProductionSystem {
     }
     final pMult =
         _techniqueMultiplier(s) * (1 + 0.5 * s.levelOf('collaborator'));
-    var p = (baseP + producersP) * pMult;
+    var p = (baseP + producersP * const ChallengeService().passiveProductionFactor(s)) *
+        pMult;
     p = p * m.proofingMultiplier + m.proofingRateAdd;
     // Noether: Proofing ×2 while focused on algebraic branches (§13.9).
     if (const PrestigeService().hasMathematician(s, 'noether') &&
@@ -84,10 +88,10 @@ class ProductionSystem {
     c *= m.globalResourceMult;
     p *= m.globalResourceMult;
 
-    // Proven conjectures grant permanent boosts to their reward channels
-    // (section 4).
-    c *= s.conjectureCountingMult * s.conjectureGlobalMult;
-    p *= s.conjectureProofingMult * s.conjectureGlobalMult;
+    // Proven conjectures and completed challenges grant permanent boosts
+    // to their reward channels (sections 4, 7).
+    c *= s.conjectureCountingMult * s.conjectureGlobalMult * s.challengeGlobalMult;
+    p *= s.conjectureProofingMult * s.conjectureGlobalMult * s.challengeGlobalMult;
 
     // Lifetime Legacy: every point permanently adds +2% to all production.
     final legacyMult = const PrestigeService().productionMultiplier(s);
@@ -105,6 +109,7 @@ class ProductionSystem {
         fameMultiplier(s) *
         m.globalResourceMult *
         s.conjectureGlobalMult *
+        s.challengeGlobalMult *
         burnMult;
     // Euler: citation Fame ×2 (prestige perk, section 13.9).
     if (const PrestigeService().hasMathematician(s, 'euler')) f *= 2;

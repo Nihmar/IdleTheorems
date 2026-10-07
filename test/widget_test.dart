@@ -12,6 +12,19 @@ Widget wrap(ProviderContainer container) => UncontrolledProviderScope(
       child: MaterialApp(home: const MainOverlay()),
     );
 
+/// Opens the shop and scrolls until the Laboratory section is on screen.
+Future<void> scrollToLaboratory(WidgetTester tester) async {
+  await tester.tap(find.text('Shop'));
+  await tester.pumpAndSettle();
+  // The laboratory sits mid-list in the lazy shop.
+  for (var i = 0;
+      i < 10 && find.text('LABORATORY').evaluate().isEmpty;
+      i++) {
+    await tester.dragFrom(const Offset(400, 500), const Offset(0, -400));
+    await tester.pumpAndSettle();
+  }
+}
+
 void main() {
   testWidgets('new player picks their name on first launch', (tester) async {
     final container = ProviderContainer();
@@ -140,7 +153,7 @@ void main() {
     await tester.pumpAndSettle();
     // The sabbatical card sits below the fold of the lazy shop list.
     for (var i = 0;
-        i < 10 && find.textContaining('Sabbatical').evaluate().isEmpty;
+        i < 15 && find.textContaining('Sabbatical').evaluate().isEmpty;
         i++) {
       await tester.dragFrom(const Offset(400, 500), const Offset(0, -400));
       await tester.pumpAndSettle();
@@ -148,17 +161,50 @@ void main() {
     expect(find.textContaining('Sabbatical'), findsOneWidget);
   });
 
-  Future<void> scrollToLaboratory(WidgetTester tester) async {
-    await tester.tap(find.text('Shop'));
-    await tester.pumpAndSettle();
-    // The laboratory sits mid-list in the lazy shop.
+  testWidgets('challenges section lists runs and their gates', (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    container
+        .read(gameStateProvider.notifier)
+        .bootstrap(GameState()..playerName = 'Blaise');
+
+    await tester.pumpWidget(wrap(container));
+    await scrollToLaboratory(tester);
+    // Scroll until the first challenge card is built.
     for (var i = 0;
-        i < 10 && find.text('LABORATORY').evaluate().isEmpty;
+        i < 15 &&
+            find.textContaining('Constructivist Run').evaluate().isEmpty;
         i++) {
       await tester.dragFrom(const Offset(400, 500), const Offset(0, -400));
       await tester.pumpAndSettle();
     }
-  }
+    expect(find.text('CHALLENGES'), findsOneWidget);
+    expect(find.textContaining('Constructivist Run'), findsOneWidget);
+    // Keep scrolling until the encrypted run's gate label is built.
+    for (var i = 0;
+        i < 15 &&
+            find.text('Unlocks after completing Cryptography')
+                .evaluate()
+                .isEmpty;
+        i++) {
+      await tester.dragFrom(const Offset(400, 500), const Offset(0, -400));
+      await tester.pumpAndSettle();
+    }
+    expect(find.text('Unlocks after completing Cryptography'), findsOneWidget);
+  });
+
+  testWidgets('an active challenge wears its HUD chip', (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    final notifier = container.read(gameStateProvider.notifier);
+    notifier.bootstrap(GameState()..playerName = 'Blaise');
+
+    await tester.pumpWidget(wrap(container));
+    notifier.enterChallenge('constructivist_run');
+    await tester.pumpAndSettle();
+
+    expect(find.text('Constructivist Run'), findsOneWidget);
+  });
 
   testWidgets('laboratory stays sealed below Professor', (tester) async {
     final container = ProviderContainer();

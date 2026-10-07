@@ -3,6 +3,7 @@ import 'dart:math';
 import '../../domain/models/game_state.dart';
 import '../../domain/models/save_data.dart';
 import '../../utils/number_format.dart';
+import 'challenge_service.dart';
 
 /// Soft-failure frictions (plan section 2): retractions and burnout.
 /// Nothing here is a hard failure — only strategic friction that creates
@@ -66,7 +67,10 @@ class FrictionSystem {
     }
 
     if (s.activePapers.length >= overloadPaperThreshold) {
-      s.stress = (s.stress + stressPerSecondOverloaded * dt).clamp(0.0, 1.0);
+      // Encrypted Run: secrecy makes overload bite twice as hard (§7).
+      final stressRate =
+          stressPerSecondOverloaded * const ChallengeService().stressFactor(s);
+      s.stress = (s.stress + stressRate * dt).clamp(0.0, 1.0);
       if ((s.stress >= 1.0 - 1e-9) && !isBurnedOut(s, t)) {
         s.burnedOutUntil = t.add(burnoutDuration);
         s.stress = postBurnoutStress;
