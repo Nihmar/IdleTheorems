@@ -117,10 +117,10 @@ class ProductionSystem {
     c *= burnMult;
     p *= burnMult;
 
-    // Passive citations: 0.01 F/s per published paper this run.
+    // Passive citations: 0.01 F/s per paper published this run (§13.4).
     var f =
         0.01 *
-        s.papersInRun *
+        s.papersPublishedInRun *
         fameMultiplier(s) *
         m.globalResourceMult *
         s.conjectureGlobalMult *

@@ -7,12 +7,9 @@ enum ReviewOutcome { accepted, revisionRequested, rejected }
 /// Peer review pipeline for papers (plan sections 2 and 13.4).
 /// No hard failure: rejection costs the paper but grants Metodo XP.
 class ReviewService {
-  ReviewService({Random? rng, BalanceService? balance})
-    : _rng = rng ?? Random(),
-      _balance = balance ?? const BalanceService();
+  ReviewService({Random? rng}) : _rng = rng ?? Random();
 
   final Random _rng;
-  final BalanceService _balance;
 
   /// Rolls the review outcome. `acceptanceBonus` shifts probability mass
   /// toward acceptance (e.g. Probability subject, phase 2+); revision and
@@ -46,10 +43,6 @@ class ReviewService {
         (1 + PaperConfig.famePerPaperBonus * papersPublishedThisRun);
     return afterRevision ? base * PaperConfig.revisionFameMultiplier : base;
   }
-
-  /// Cost of rewriting after "revision requested": half the original cost.
-  double revisionCost(int papersStartedThisRun) =>
-      _balance.paperCost(papersStartedThisRun) / 2;
 
   /// Metodo XP gained from a rejected paper.
   static const int methodXpOnRejection = 2;

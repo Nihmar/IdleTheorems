@@ -78,6 +78,7 @@ void main() {
       expect(s.scheduledRetractions, isEmpty);
       expect(s.trend.activeSubject, isEmpty);
       expect(s.papersInRun, 0);
+      expect(s.papersPublishedInRun, 0);
     });
 
     test('no-op below the minimum gain', () {
@@ -129,11 +130,11 @@ void main() {
 
     test('Euler doubles citation Fame', () {
       final base = const ProductionSystem().compute(
-        GameState()..papersInRun = 10,
+        GameState()..papersPublishedInRun = 10,
       );
       final euler = const ProductionSystem().compute(
         GameState()
-          ..papersInRun = 10
+          ..papersPublishedInRun = 10
           ..prestige.mathematicians.add('euler'),
       );
       expect(euler.famePerSec / base.famePerSec, closeTo(2, 1e-9));

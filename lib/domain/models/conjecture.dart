@@ -55,12 +55,14 @@ class ConjectureState {
   factory ConjectureState.fromJson(Map<String, dynamic> json) =>
       ConjectureState(
         defId: json['def_id'] as String,
-        status: ConjectureStatus.values.byName(json['status'] as String),
-        progress: (json['progress'] as num).toDouble(),
-        lastWorkAt: DateTime.fromMillisecondsSinceEpoch(
-          json['last_work_at_ms'] as int,
+        status: ConjectureStatus.values.byName(
+          json['status'] as String? ?? ConjectureStatus.available.name,
         ),
-        attempts: json['attempts'] as int,
+        progress: (json['progress'] as num?)?.toDouble() ?? 0,
+        lastWorkAt: DateTime.fromMillisecondsSinceEpoch(
+          json['last_work_at_ms'] as int? ?? 0,
+        ),
+        attempts: json['attempts'] as int? ?? 0,
         resolvedAt: json['resolved_at_ms'] == null
             ? null
             : DateTime.fromMillisecondsSinceEpoch(

@@ -13,10 +13,15 @@ class PaperJob {
   /// True while waiting for the half-cost rewrite payment.
   bool awaitingRewrite;
 
+  /// Proofing price paid when the paper was started; a rewrite costs half
+  /// of it regardless of how many other papers were queued meanwhile.
+  double originalCost;
+
   PaperJob(
     this.remainingSeconds, {
     this.revisionBonus = false,
     this.awaitingRewrite = false,
+    this.originalCost = 0,
   });
 }
 
@@ -54,6 +59,10 @@ class GameState {
   int metodoLevel = 1;
   int metodoXp = 0;
   int papersInRun = 0;
+
+  /// Papers accepted this run: drives Fame scaling and passive citations
+  /// (§13.4). Resets with the run at prestige.
+  int papersPublishedInRun = 0;
 
   /// Cosmetic titles earned by proving open problems (§3 endgame).
   List<String> titles = [];
@@ -135,6 +144,7 @@ class GameState {
       metodoLevel: metodoLevel,
       metodoXp: metodoXp,
       papersInRun: papersInRun,
+      papersPublishedInRun: papersPublishedInRun,
       titles: List.of(titles),
       activeChallenge: activeChallenge,
       completedChallenges: List.of(completedChallenges),
@@ -199,6 +209,7 @@ class GameState {
       ..metodoLevel = save.metodoLevel
       ..metodoXp = save.metodoXp
       ..papersInRun = save.papersInRun
+      ..papersPublishedInRun = save.papersPublishedInRun
       ..titles = List.of(save.titles)
       ..activeChallenge = save.activeChallenge
       ..completedChallenges = List.of(save.completedChallenges)

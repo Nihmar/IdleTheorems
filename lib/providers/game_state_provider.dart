@@ -180,7 +180,9 @@ class GameStateNotifier extends Notifier<GameState> {
     final cost = _balance.paperCost(state.papersInRun) * m.paperCostFactor;
     if (!state.resources.spend(0, cost)) return false;
     state.papersInRun++;
-    state.activePapers.add(PaperJob(PaperConfig.writeDurationSeconds));
+    state.activePapers.add(
+      PaperJob(PaperConfig.writeDurationSeconds, originalCost: cost),
+    );
     _afterMutation();
     return true;
   }
@@ -370,7 +372,8 @@ class GameStateNotifier extends Notifier<GameState> {
   void _advancePapers(double dt) {
     for (final job in List.of(state.activePapers)) {
       if (job.awaitingRewrite) {
-        final rewriteCost = _review.revisionCost(state.papersInRun - 1);
+        // Rewrite at half of this paper's own starting price (§13.4).
+        final rewriteCost = job.originalCost / 2;
         if (_spendByKind(ResourceKind.proofing, rewriteCost)) {
           job.awaitingRewrite = false;
           job.remainingSeconds = PaperConfig.writeDurationSeconds;
@@ -395,7 +398,7 @@ class GameStateNotifier extends Notifier<GameState> {
     switch (outcome) {
       case ReviewOutcome.accepted:
         var fame = _review.paperReward(
-          state.papersInRun,
+          state.papersPublishedInRun,
           fameMultiplier: fameMultiplier,
           afterRevision: job.revisionBonus,
         );
@@ -413,6 +416,7 @@ class GameStateNotifier extends Notifier<GameState> {
         }
         state.gain(0, 0, fame);
         state.stats.papersPublished++;
+        state.papersPublishedInRun++;
         _friction.maybeScheduleRetraction(state, _rng);
         _subjects.registerAcceptedPaper(state);
         return true;

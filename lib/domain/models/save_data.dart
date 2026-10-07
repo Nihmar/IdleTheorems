@@ -10,8 +10,8 @@ class BranchProgress {
   BranchProgress({this.theoremsMastered = 0, this.completed = false});
 
   factory BranchProgress.fromJson(Map<String, dynamic> json) => BranchProgress(
-    theoremsMastered: json['theorems_mastered'] as int,
-    completed: json['completed'] as bool,
+    theoremsMastered: json['theorems_mastered'] as int? ?? 0,
+    completed: json['completed'] as bool? ?? false,
   );
 
   Map<String, dynamic> toJson() => {
@@ -37,12 +37,13 @@ class PrestigeState {
   }) : mathematicians = mathematicians ?? [];
 
   factory PrestigeState.fromJson(Map<String, dynamic> json) => PrestigeState(
-    legacy: json['legacy'] as int,
+    legacy: json['legacy'] as int? ?? 0,
     // Old saves predate the split: treat the bank as the all-time total.
-    legacyAllTime: (json['legacy_all_time'] as int?) ?? (json['legacy'] as int),
-    prestigesCount: json['prestiges_count'] as int,
-    mathematicians: (json['mathematicians'] as List<dynamic>)
-        .map((e) => e as String)
+    legacyAllTime:
+        (json['legacy_all_time'] as int?) ?? (json['legacy'] as int? ?? 0),
+    prestigesCount: json['prestiges_count'] as int? ?? 0,
+    mathematicians: (json['mathematicians'] as List<dynamic>? ?? const [])
+        .map((e) => e.toString())
         .toList(),
   );
 
@@ -97,7 +98,7 @@ class ScheduledRetraction {
 
   factory ScheduledRetraction.fromJson(Map<String, dynamic> json) =>
       ScheduledRetraction(
-        DateTime.fromMillisecondsSinceEpoch(json['due_at_ms'] as int),
+        DateTime.fromMillisecondsSinceEpoch(json['due_at_ms'] as int? ?? 0),
       );
 }
 
@@ -166,10 +167,10 @@ class Stats {
 /// Full save schema (plan section 14.2), hand-rolled JSON so it stays
 /// testable without codegen. Dates are epoch milliseconds.
 ///
-/// Fields marked "addition" go beyond the v4 doc draft and are needed for a
+/// Fields marked "addition" go beyond the doc draft and are needed for a
 /// playable loop; they are additive (no breaking change to existing keys).
 class SaveData {
-  static const int currentVersion = 3;
+  static const int currentVersion = 4;
 
   int version;
 
@@ -210,8 +211,12 @@ class SaveData {
   /// XP towards the next Metodo level (addition vs doc draft).
   int metodoXp;
 
-  /// Papers started this run: drives paper cost scaling and citations.
+  /// Papers started this run: drives paper cost scaling (§13.4).
   int papersInRun;
+
+  /// Papers accepted this run: drives Fame scaling and passive citations
+  /// (§13.4); added in schema v4.
+  int papersPublishedInRun;
 
   /// Cosmetic titles earned by proving open problems (§3 endgame);
   /// persists across prestiges.
@@ -253,6 +258,7 @@ class SaveData {
     required this.metodoLevel,
     required this.metodoXp,
     required this.papersInRun,
+    required this.papersPublishedInRun,
     this.titles = const [],
     this.activeChallenge = '',
     this.completedChallenges = const [],
@@ -280,6 +286,7 @@ class SaveData {
       metodoLevel: 1,
       metodoXp: 0,
       papersInRun: 0,
+      papersPublishedInRun: 0,
       settings: Settings(),
       stats: Stats(),
     );
@@ -320,6 +327,7 @@ class SaveData {
     'metodo_level': metodoLevel,
     'metodo_xp': metodoXp,
     'papers_in_run': papersInRun,
+    'papers_published_in_run': papersPublishedInRun,
     'titles': titles,
     'active_challenge': activeChallenge,
     'completed_challenges': completedChallenges,
@@ -330,25 +338,36 @@ class SaveData {
 
   factory SaveData.fromJson(Map<String, dynamic> json) {
     final raw = migrate(json);
+    // Optional nested objects fall back to empty maps so partially written
+    // or hand-edited saves degrade per-field instead of crashing the load.
+    final res = raw['resources'] as Map<String, dynamic>? ?? {};
+    final life = raw['lifetime'] as Map<String, dynamic>? ?? {};
+    final car = raw['career'] as Map<String, dynamic>? ?? {};
     return SaveData(
       version: raw['version'] as int,
       playerName: raw['player_name'] as String? ?? '',
-      savedAt: DateTime.fromMillisecondsSinceEpoch(raw['saved_at_ms'] as int),
+      savedAt: DateTime.fromMillisecondsSinceEpoch(
+        raw['saved_at_ms'] as int? ?? 0,
+      ),
       lastLoadedAt: DateTime.fromMillisecondsSinceEpoch(
-        raw['last_loaded_at_ms'] as int,
+        raw['last_loaded_at_ms'] as int? ?? 0,
       ),
       resources: Resources(
-        counting: (raw['resources']['counting'] as num).toDouble(),
-        proofing: (raw['resources']['proofing'] as num).toDouble(),
-        fame: (raw['resources']['fame'] as num).toDouble(),
+        counting: (res['counting'] as num?)?.toDouble() ?? 0,
+        proofing: (res['proofing'] as num?)?.toDouble() ?? 0,
+        fame: (res['fame'] as num?)?.toDouble() ?? 0,
       ),
-      lifetime: (raw['lifetime'] as Map<String, dynamic>).map(
-        (k, v) => MapEntry(k, (v as num).toDouble()),
-      ),
+      // Always materialise the known kinds so consumers never hit nulls.
+      lifetime: {
+        for (final kind in const ['counting', 'proofing', 'fame'])
+          kind: (life[kind] as num?)?.toDouble() ?? 0,
+      },
       career: CareerState(
-        stage: CareerStage.values.byName(raw['career']['stage'] as String),
-        thesisDefended: raw['career']['thesis_defended'] as bool,
-        apprentices: raw['career']['apprentices'] as int,
+        stage: CareerStage.values.byName(
+          car['stage'] as String? ?? CareerStage.student.name,
+        ),
+        thesisDefended: car['thesis_defended'] as bool? ?? false,
+        apprentices: car['apprentices'] as int? ?? 0,
       ),
       branches: (raw['branches'] as Map<String, dynamic>? ?? {}).map(
         (k, v) =>
@@ -361,10 +380,13 @@ class SaveData {
         (k, v) => MapEntry(k, v as int),
       ),
       techniques: (raw['techniques'] as List<dynamic>? ?? [])
-          .map((e) => e as String)
+          .whereType<String>()
           .toList(),
       conjectures: (raw['conjectures'] as List<dynamic>? ?? [])
-          .map((e) => ConjectureState.fromJson(e as Map<String, dynamic>))
+          .whereType<Map<String, dynamic>>()
+          // Entries without a definition id cannot be resolved and are dropped.
+          .where((e) => (e['def_id'] as String?)?.isNotEmpty == true)
+          .map((e) => ConjectureState.fromJson(e))
           .toList(),
       conjCountMult: (raw['conj_count_mult'] as num?)?.toDouble() ?? 1,
       conjProofMult: (raw['conj_proof_mult'] as num?)?.toDouble() ?? 1,
@@ -377,15 +399,17 @@ class SaveData {
             ),
       scheduledRetractions:
           (raw['scheduled_retractions'] as List<dynamic>? ?? [])
-              .map(
-                (e) => ScheduledRetraction.fromJson(e as Map<String, dynamic>),
-              )
+              .whereType<Map<String, dynamic>>()
+              .map((e) => ScheduledRetraction.fromJson(e))
               .toList(),
-      prestige: PrestigeState.fromJson(raw['prestige'] as Map<String, dynamic>),
-      trend: TrendState.fromJson(raw['trend'] as Map<String, dynamic>),
+      prestige: PrestigeState.fromJson(
+        raw['prestige'] as Map<String, dynamic>? ?? {},
+      ),
+      trend: TrendState.fromJson(raw['trend'] as Map<String, dynamic>? ?? {}),
       metodoLevel: raw['metodo_level'] as int? ?? 1,
       metodoXp: raw['metodo_xp'] as int? ?? 0,
       papersInRun: raw['papers_in_run'] as int? ?? 0,
+      papersPublishedInRun: raw['papers_published_in_run'] as int? ?? 0,
       titles: (raw['titles'] as List<dynamic>? ?? const [])
           .map((e) => e.toString())
           .toList(),
@@ -396,19 +420,52 @@ class SaveData {
               .toList(),
       challengeGlobalMult:
           (raw['challenge_global_mult'] as num?)?.toDouble() ?? 1,
-      settings: Settings.fromJson(raw['settings'] as Map<String, dynamic>),
-      stats: Stats.fromJson(raw['stats'] as Map<String, dynamic>),
+      settings: Settings.fromJson(
+        raw['settings'] as Map<String, dynamic>? ?? {},
+      ),
+      stats: Stats.fromJson(raw['stats'] as Map<String, dynamic>? ?? {}),
     );
   }
 
   /// Migration chain N -> N+1; never skip versions (section 14.4).
+  /// Saves from older builds are walked step by step up to [currentVersion];
+  /// saves newer than this build are rejected explicitly.
   static Map<String, dynamic> migrate(Map<String, dynamic> raw) {
-    switch (raw['version'] as int? ?? -1) {
-      case currentVersion:
-        return raw;
-      default:
-        // No older schema exists yet (first shipped version is 3).
-        throw FormatException('Unsupported save version: ${raw['version']}');
+    var data = Map<String, dynamic>.from(raw);
+    final version = data['version'] as int? ?? -1;
+    if (version < 0) {
+      throw const FormatException('Save has no version stamp');
     }
+    for (var v = version; v < currentVersion; v++) {
+      data = _migrateStep(data, v);
+    }
+    if (data['version'] != currentVersion) {
+      throw FormatException(
+        'Save version $version is newer than this build ($currentVersion)',
+      );
+    }
+    return data;
+  }
+
+  /// Single-step migrations keyed by source version. Each step must leave
+  /// [data] fully readable as its target version (section 14.4).
+  static Map<String, dynamic> _migrateStep(
+    Map<String, dynamic> data,
+    int fromVersion,
+  ) {
+    final out = Map<String, dynamic>.from(data);
+    switch (fromVersion) {
+      case 3:
+        // v3 -> v4: per-run accepted-paper counter. Fame scaling and passive
+        // citations now key off published papers (section 13.4); old runs
+        // start at zero rather than guessing.
+        out['papers_published_in_run'] = 0;
+        out['version'] = 4;
+      default:
+        throw FormatException(
+          'Missing migration step from save version $fromVersion',
+        );
+    }
+    return out;
   }
 }

@@ -119,10 +119,10 @@ void main() {
 
     test('completed-challenge boost feeds every production channel', () {
       final prod = const ProductionSystem();
-      final base = prod.compute(_state()..papersInRun = 10);
+      final base = prod.compute(_state()..papersPublishedInRun = 10);
       final boosted = prod.compute(
         _state()
-          ..papersInRun = 10
+          ..papersPublishedInRun = 10
           ..challengeGlobalMult = 1.05,
       );
       expect(boosted.famePerSec / base.famePerSec, closeTo(1.05, 1e-9));
