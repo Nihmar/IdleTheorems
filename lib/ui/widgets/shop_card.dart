@@ -75,7 +75,7 @@ class ShopCard extends StatelessWidget {
               onPressed: enabled ? onBuy : null,
               style: FilledButton.styleFrom(
                 backgroundColor: Palette.action,
-                foregroundColor: Colors.black,
+                foregroundColor: Palette.paper,
                 disabledBackgroundColor: Palette.surfaceAlt,
                 disabledForegroundColor: Palette.inkFaint,
                 minimumSize: const Size(96, 36),

@@ -23,14 +23,14 @@ abstract final class Palette {
   static const Color ink = Color(0xFF2E2A23);
   /// Secondary text.
   static const Color inkSoft = Color(0xFF6E675A);
-  /// Tertiary/disabled text.
-  static const Color inkFaint = Color(0xFFA29A85);
+  /// Tertiary/disabled text (kept dark enough for 12px legibility).
+  static const Color inkFaint = Color(0xFF746B5A);
 
   // ------------------------------------------------------------ accents
-  /// Goldenrod for highlights, trends, section titles.
-  static const Color accent = Color(0xFFA67C1B);
-  /// Sage green for action buttons and positive rates.
-  static const Color action = Color(0xFF6F8F4F);
+  /// Deep goldenrod for highlights, trends, section titles.
+  static const Color accent = Color(0xFF8A6512);
+  /// Deep sepia for action buttons; reads as pressed ink on paper.
+  static const Color action = Color(0xFF5A4632);
   /// Amber for warnings and locked items.
   static const Color warn = Color(0xFFB07D2A);
   /// Rust red for retractions, burnout and other hazards.

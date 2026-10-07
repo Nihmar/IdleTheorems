@@ -508,7 +508,7 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
                   onPressed: () => ref.read(gameStateProvider.notifier).solveExercise(),
                   style: FilledButton.styleFrom(
                     backgroundColor: Palette.action,
-                    foregroundColor: Colors.black,
+                    foregroundColor: Palette.paper,
                     minimumSize: const Size(0, 48),
                     textStyle:
                         const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
@@ -605,7 +605,9 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: focused ? 0.45 : 0.3),
+        color: focused
+            ? Palette.accent.withValues(alpha: 0.12)
+            : Palette.surface,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
             color:
@@ -786,7 +788,7 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
                         : null,
                     style: FilledButton.styleFrom(
                         backgroundColor: Palette.action,
-                        foregroundColor: Colors.black,
+                        foregroundColor: Palette.paper,
                         minimumSize: const Size(0, 34)),
                     icon: const Icon(Icons.add_circle_outline, size: 18),
                     label: Text(slotsFree ? 'Formulate ($formCost)' : 'Slots full'))),
@@ -1061,7 +1063,7 @@ class _NameEntryPanelState extends ConsumerState<_NameEntryPanel> {
                   onPressed: () => _confirm(),
                   style: FilledButton.styleFrom(
                     backgroundColor: Palette.action,
-                    foregroundColor: Colors.black,
+                    foregroundColor: Palette.paper,
                     minimumSize: const Size(0, 48),
                     textStyle:
                         const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
