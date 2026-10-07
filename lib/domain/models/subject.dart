@@ -51,7 +51,7 @@ class SubjectEffects {
   final int extraPapers;
   /// x on the offline progression cap duration.
   final double offlineCapMult;
-  /// x on Legacy gained at prestige (wired when prestige lands).
+  /// x on Legacy gained at prestige.
   final double legacyGainMult;
   /// Production compounds while playing (+0.5%/min, capped at x2).
   final bool sessionCompounding;
@@ -245,8 +245,9 @@ const Map<String, SubjectDef> subjectCatalog = {
     name: 'Cryptography',
     level: 3,
     prereqs: ['number_theory', 'probability'],
-    effects: SubjectEffects(),
-    effectText: 'Unlocks encrypted challenge runs (coming soon)',
+    effects: SubjectEffects(legacyGainMult: 1.10),
+    effectText:
+        'Unlocks encrypted challenge runs; +10% Legacy gained at prestige',
   ),
   'functional_analysis': SubjectDef(
     id: 'functional_analysis',

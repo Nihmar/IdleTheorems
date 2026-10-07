@@ -92,6 +92,12 @@ void main() {
       expect(m.proofingRateAdd, closeTo(1.0, 1e-9));
     });
 
+    test('completed Cryptography multiplies Legacy gain at prestige', () {
+      final s = _state(
+          branches: {'cryptography': BranchProgress(completed: true)});
+      expect(svc.modifiers(s).legacyGainMult, closeTo(1.10, 1e-9));
+    });
+
     test('number theory scales Counting with total theorems mastered', () {
       final s = _state(branches: {
         'number_theory':
