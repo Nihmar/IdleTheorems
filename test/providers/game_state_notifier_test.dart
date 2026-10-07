@@ -69,6 +69,12 @@ void main() {
     final s = container.read(gameStateProvider);
     expect(s.activePapers.length, 1);
     expect(s.papersInRun, 1);
+    // Nothing accepted yet: the published counter stays at zero.
+    expect(s.papersPublishedInRun, 0);
+    expect(
+      s.activePapers.single.originalCost,
+      closeTo(const BalanceService().paperCost(0), 1e-9),
+    );
   });
 
   test('ticking eventually resolves every paper attempt', () {

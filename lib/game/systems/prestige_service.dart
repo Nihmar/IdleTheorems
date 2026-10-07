@@ -128,6 +128,7 @@ class PrestigeService {
     s.burnedOutUntil = null;
     s.scheduledRetractions = [];
     s.papersInRun = 0;
+    s.papersPublishedInRun = 0;
     s.activePapers.clear();
   }
 }
