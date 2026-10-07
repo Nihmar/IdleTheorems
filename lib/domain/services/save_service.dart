@@ -22,7 +22,9 @@ class SaveService {
     final raw = _box.get(_currentKey);
     if (raw == null) return null;
     try {
-      return SaveData.fromJson(jsonDecode(raw as String) as Map<String, dynamic>);
+      return SaveData.fromJson(
+        jsonDecode(raw as String) as Map<String, dynamic>,
+      );
     } catch (e) {
       // Corrupt or unsupported version: start fresh rather than crash.
       // (Migration chain lives in SaveData.migrate.)

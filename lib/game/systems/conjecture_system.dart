@@ -57,9 +57,11 @@ class ConjectureSystem {
 
   /// Active OR cooling-down conjectures occupy their slots.
   int activeCount(GameState s) => s.conjectures
-      .where((c) =>
-          c.status == ConjectureStatus.active ||
-          c.status == ConjectureStatus.refuted)
+      .where(
+        (c) =>
+            c.status == ConjectureStatus.active ||
+            c.status == ConjectureStatus.refuted,
+      )
       .length;
 
   bool _sharesSubject(GameState s, ConjectureDef d) {
@@ -90,10 +92,15 @@ class ConjectureSystem {
     final d = conjectureCatalog[id]!;
     if (!slotsAvailable(s, id)) return false;
     if (!s.resources.spend(
-        d.formulation.counting, d.formulation.proofing, d.formulation.fame)) {
+      d.formulation.counting,
+      d.formulation.proofing,
+      d.formulation.fame,
+    )) {
       return false;
     }
-    s.conjectures.add(ConjectureState(defId: id, status: ConjectureStatus.active));
+    s.conjectures.add(
+      ConjectureState(defId: id, status: ConjectureStatus.active),
+    );
     return true;
   }
 
@@ -117,7 +124,10 @@ class ConjectureSystem {
     final d = conjectureCatalog[id];
     if (st == null || d == null || !canWork(s, id)) return null;
     if (!s.resources.spend(
-        d.workPerSession.counting, d.workPerSession.proofing, d.workPerSession.fame)) {
+      d.workPerSession.counting,
+      d.workPerSession.proofing,
+      d.workPerSession.fame,
+    )) {
       return null;
     }
     var gain = d.progressPerWork * (1 + trendBonus);
@@ -139,10 +149,18 @@ class ConjectureSystem {
   }
 
   ConjectureOutcome _resolve(
-      GameState s, ConjectureState st, ConjectureDef d, double ramanujanBonus) {
+    GameState s,
+    ConjectureState st,
+    ConjectureDef d,
+    double ramanujanBonus,
+  ) {
     st.attempts++;
     if (_rng.nextDouble() <
-        successProbability(s.metodoLevel, d.tier, ramanujanBonus: ramanujanBonus)) {
+        successProbability(
+          s.metodoLevel,
+          d.tier,
+          ramanujanBonus: ramanujanBonus,
+        )) {
       st.status = ConjectureStatus.proven;
       st.resolvedAt = DateTime.now();
       _applyRewards(s, d.successRewards);
@@ -158,9 +176,15 @@ class ConjectureSystem {
 
   /// P(successo) = clamp(0.50 + 0.08·(metodo − tier) + bonusRamanujan,
   /// 0.15, 0.95) — section 4. The Ramanujan bonus lands with prestige.
-  double successProbability(int metodoLevel, int tier,
-      {double ramanujanBonus = 0}) {
-    return (0.50 + 0.08 * (metodoLevel - tier) + ramanujanBonus).clamp(0.15, 0.95);
+  double successProbability(
+    int metodoLevel,
+    int tier, {
+    double ramanujanBonus = 0,
+  }) {
+    return (0.50 + 0.08 * (metodoLevel - tier) + ramanujanBonus).clamp(
+      0.15,
+      0.95,
+    );
   }
 
   void _applyRewards(GameState s, List<ConjectureReward> rewards) {

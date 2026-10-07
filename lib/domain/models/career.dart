@@ -22,8 +22,8 @@ class CareerState {
   });
 
   CareerState copy() => CareerState(
-        stage: stage,
-        thesisDefended: thesisDefended,
-        apprentices: apprentices,
-      );
+    stage: stage,
+    thesisDefended: thesisDefended,
+    apprentices: apprentices,
+  );
 }

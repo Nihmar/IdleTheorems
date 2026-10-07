@@ -155,8 +155,10 @@ class TechniqueDef {
   final String name;
   final String description;
   final double costCounting;
+
   /// True only for `elementary_formalization`: enables base 0.5 P/s.
   final bool unlocksBaseProofing;
+
   /// Multiplicative effect on total Proofing rate.
   final double proofingMultiplier;
 

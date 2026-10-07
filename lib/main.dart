@@ -53,7 +53,8 @@ Future<void> main() async {
       container: container,
       child: IdleTheoremsApp(
         saveNow: () => saveService.save(
-            container.read(gameStateProvider.notifier).snapshotForSave()),
+          container.read(gameStateProvider.notifier).snapshotForSave(),
+        ),
         onResumed: (awaySince) {
           final n = container.read(gameStateProvider.notifier);
           n.applyAwayEarnings(n.snapshotForSave(awaySince), DateTime.now());
@@ -64,7 +65,11 @@ Future<void> main() async {
 }
 
 class IdleTheoremsApp extends StatelessWidget {
-  const IdleTheoremsApp({required this.saveNow, required this.onResumed, super.key});
+  const IdleTheoremsApp({
+    required this.saveNow,
+    required this.onResumed,
+    super.key,
+  });
 
   /// Persists the current state (used by autosave + lifecycle hooks).
   final Future<void> Function() saveNow;

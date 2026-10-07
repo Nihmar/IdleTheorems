@@ -33,20 +33,27 @@ void main() {
     test('requires postdoc career stage', () {
       final s = _postdoc(completed: ['discrete_algebra']);
       s.career.stage = CareerStage.student;
-      expect(ConjectureSystem().canFormulate(s, 'double_counting_lemmas'),
-          isFalse);
+      expect(
+        ConjectureSystem().canFormulate(s, 'double_counting_lemmas'),
+        isFalse,
+      );
     });
 
     test('requires every listed branch to be completed', () {
       final svc = ConjectureSystem();
       final s = _postdoc();
       expect(svc.canFormulate(s, 'double_counting_lemmas'), isFalse);
-      expect(svc.missingSubjects(s, 'double_counting_lemmas'),
-          equals(['discrete_algebra']));
       expect(
-          svc.canFormulate(_postdoc(completed: ['discrete_algebra']),
-              'double_counting_lemmas'),
-          isTrue);
+        svc.missingSubjects(s, 'double_counting_lemmas'),
+        equals(['discrete_algebra']),
+      );
+      expect(
+        svc.canFormulate(
+          _postdoc(completed: ['discrete_algebra']),
+          'double_counting_lemmas',
+        ),
+        isTrue,
+      );
     });
 
     test('already-formulated conjectures cannot be formulated again', () {
@@ -61,8 +68,9 @@ void main() {
   group('slot caps', () {
     test('max two active discoveries globally', () {
       final svc = ConjectureSystem();
-      final s =
-          _postdoc(completed: ['discrete_algebra', 'analysis', 'number_theory']);
+      final s = _postdoc(
+        completed: ['discrete_algebra', 'analysis', 'number_theory'],
+      );
       expect(svc.formulate(s, 'double_counting_lemmas'), isTrue);
       expect(svc.formulate(s, 'integral_test_bounds'), isTrue);
       expect(svc.activeCount(s), 2);
@@ -108,7 +116,10 @@ void main() {
       expect(st.resolvedAt, isNotNull);
       // Reward: +25% counting production.
       expect(s.conjectureCountingMult, closeTo(1.25, 1e-9));
-      expect(s.lifetimeOf(ResourceKind.fame), fameBefore); // no burst reward here
+      expect(
+        s.lifetimeOf(ResourceKind.fame),
+        fameBefore,
+      ); // no burst reward here
     });
 
     test('failure halves progress, sets cooldown, keeps the slot', () {
@@ -123,8 +134,7 @@ void main() {
       expect(st.status, ConjectureStatus.refuted);
       expect(st.progress, closeTo(50, 1e-9)); // clamped to 100 then halved
       expect(st.readyAt, isNotNull);
-      expect(st.readyAt!.difference(DateTime.now()).inMinutes,
-          closeTo(30, 2));
+      expect(st.readyAt!.difference(DateTime.now()).inMinutes, closeTo(30, 2));
       // Still occupies a slot while cooling down.
       expect(svc.activeCount(s), 1);
     });
@@ -158,8 +168,10 @@ void main() {
     });
 
     test('Ramanujan bonus shifts the roll upward', () {
-      expect(svc.successProbability(1, 1, ramanujanBonus: 0.10),
-          closeTo(0.60, 1e-9));
+      expect(
+        svc.successProbability(1, 1, ramanujanBonus: 0.10),
+        closeTo(0.60, 1e-9),
+      );
     });
   });
 
@@ -173,8 +185,10 @@ void main() {
       svcSeeded.formulate(s, 'concentration_inequalities');
       s.conjectures.single.progress = 95;
       final before = s.resources.fame;
-      expect(svcSeeded.workSession(s, 'concentration_inequalities'),
-          ConjectureOutcome.proved);
+      expect(
+        svcSeeded.workSession(s, 'concentration_inequalities'),
+        ConjectureOutcome.proved,
+      );
       expect(s.resources.fame - before, closeTo(5000, 1e-9));
     });
 
@@ -198,8 +212,9 @@ void main() {
         ..conjectureGlobalMult = 1.5;
       final rates = const ProductionSystem().compute(s);
       // guided_exercises base output scaled by both conjecture multipliers.
-      final base = const ProductionSystem()
-          .compute(_postdoc()..producerLevels['guided_exercises'] = 1);
+      final base = const ProductionSystem().compute(
+        _postdoc()..producerLevels['guided_exercises'] = 1,
+      );
       expect(rates.countingPerSec / base.countingPerSec, closeTo(1.875, 1e-9));
     });
   });
@@ -222,8 +237,9 @@ void main() {
     test('non-endgame definitions ignore the professor gate', () {
       final svc = ConjectureSystem();
       expect(
-          svc.endgameLocked(_postdoc(), conjectureCatalog['collatz']!),
-          isFalse);
+        svc.endgameLocked(_postdoc(), conjectureCatalog['collatz']!),
+        isFalse,
+      );
     });
   });
 
@@ -237,8 +253,10 @@ void main() {
       s.conjectures.single.progress = 98;
       expect(svc.workSession(s, 'goldbach'), ConjectureOutcome.proved);
       expect(s.titles, contains('Prime Summarizer'));
-      expect(conjectureCatalog['goldbach']!.rewardSummary,
-          contains('"Prime Summarizer" title'));
+      expect(
+        conjectureCatalog['goldbach']!.rewardSummary,
+        contains('"Prime Summarizer" title'),
+      );
     });
   });
 }

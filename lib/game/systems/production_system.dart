@@ -12,7 +12,11 @@ class ProductionRates {
   final double proofingPerSec;
   final double famePerSec;
 
-  const ProductionRates(this.countingPerSec, this.proofingPerSec, this.famePerSec);
+  const ProductionRates(
+    this.countingPerSec,
+    this.proofingPerSec,
+    this.famePerSec,
+  );
 
   @override
   String toString() =>
@@ -25,8 +29,7 @@ class ProductionSystem {
   const ProductionSystem();
 
   /// Scholarship cross-upgrade: +50% Counting per level.
-  double countingMultiplier(GameState s) =>
-      1 + 0.5 * s.levelOf('scholarship');
+  double countingMultiplier(GameState s) => 1 + 0.5 * s.levelOf('scholarship');
 
   /// Seminar cross-upgrade: +50% Fame per level. Applies to both paper
   /// rewards and passive citations.
@@ -66,7 +69,9 @@ class ProductionSystem {
     }
     final pMult =
         _techniqueMultiplier(s) * (1 + 0.5 * s.levelOf('collaborator'));
-    var p = (baseP + producersP * const ChallengeService().passiveProductionFactor(s)) *
+    var p =
+        (baseP +
+            producersP * const ChallengeService().passiveProductionFactor(s)) *
         pMult;
     p = p * m.proofingMultiplier + m.proofingRateAdd;
     // Noether: Proofing ×2 while focused on algebraic branches (§13.9).
@@ -78,7 +83,10 @@ class ProductionSystem {
     // Completed subjects can compound output while actively playing
     // (+0.5%/min since session start, capped at x2).
     if (m.sessionCompounding) {
-      final minutes = DateTime.now().difference(s.sessionStartedAt).inMinutes.toDouble();
+      final minutes = DateTime.now()
+          .difference(s.sessionStartedAt)
+          .inMinutes
+          .toDouble();
       final k = (1 + 0.005 * minutes).clamp(1.0, 2.0);
       c *= k;
       p *= k;
@@ -90,8 +98,14 @@ class ProductionSystem {
 
     // Proven conjectures and completed challenges grant permanent boosts
     // to their reward channels (sections 4, 7).
-    c *= s.conjectureCountingMult * s.conjectureGlobalMult * s.challengeGlobalMult;
-    p *= s.conjectureProofingMult * s.conjectureGlobalMult * s.challengeGlobalMult;
+    c *=
+        s.conjectureCountingMult *
+        s.conjectureGlobalMult *
+        s.challengeGlobalMult;
+    p *=
+        s.conjectureProofingMult *
+        s.conjectureGlobalMult *
+        s.challengeGlobalMult;
 
     // Lifetime Legacy: every point permanently adds +2% to all production.
     final legacyMult = const PrestigeService().productionMultiplier(s);
@@ -104,7 +118,8 @@ class ProductionSystem {
     p *= burnMult;
 
     // Passive citations: 0.01 F/s per published paper this run.
-    var f = 0.01 *
+    var f =
+        0.01 *
         s.papersInRun *
         fameMultiplier(s) *
         m.globalResourceMult *

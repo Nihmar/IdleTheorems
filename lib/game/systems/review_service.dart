@@ -8,8 +8,8 @@ enum ReviewOutcome { accepted, revisionRequested, rejected }
 /// No hard failure: rejection costs the paper but grants Metodo XP.
 class ReviewService {
   ReviewService({Random? rng, BalanceService? balance})
-      : _rng = rng ?? Random(),
-        _balance = balance ?? const BalanceService();
+    : _rng = rng ?? Random(),
+      _balance = balance ?? const BalanceService();
 
   final Random _rng;
   final BalanceService _balance;
@@ -20,10 +20,15 @@ class ReviewService {
   ReviewOutcome roll({double acceptanceBonus = 0}) {
     final accept = (PaperConfig.pAccept + acceptanceBonus).clamp(0.0, 1.0);
     final rest = 1 - accept;
-    final revisionShare = PaperConfig.pRevision / (PaperConfig.pRevision + PaperConfig.pReject);
+    final revisionShare =
+        PaperConfig.pRevision / (PaperConfig.pRevision + PaperConfig.pReject);
     final x = _rng.nextDouble();
-    if (x < accept) return ReviewOutcome.accepted;
-    if (x < accept + revisionShare * rest) return ReviewOutcome.revisionRequested;
+    if (x < accept) {
+      return ReviewOutcome.accepted;
+    }
+    if (x < accept + revisionShare * rest) {
+      return ReviewOutcome.revisionRequested;
+    }
     return ReviewOutcome.rejected;
   }
 
@@ -35,7 +40,8 @@ class ReviewService {
     required double fameMultiplier,
     bool afterRevision = false,
   }) {
-    final base = PaperConfig.baseFame *
+    final base =
+        PaperConfig.baseFame *
         fameMultiplier *
         (1 + PaperConfig.famePerPaperBonus * papersPublishedThisRun);
     return afterRevision ? base * PaperConfig.revisionFameMultiplier : base;

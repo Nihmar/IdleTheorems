@@ -22,8 +22,10 @@ class ShopCard extends StatelessWidget {
   final String costLabel;
   final bool canAfford;
   final VoidCallback onBuy;
+
   /// "Owned xN" badge when repeatable; null for one-time items.
   final int? owned;
+
   /// When set, the item is hidden behind a gate (e.g. requires a parent branch).
   final String? lockedReason;
 
@@ -47,24 +49,36 @@ class ShopCard extends StatelessWidget {
                 Row(
                   children: [
                     Flexible(
-                      child: Text(name,
-                          style: const TextStyle(
-                              color: Palette.ink, fontWeight: FontWeight.w600)),
+                      child: Text(
+                        name,
+                        style: const TextStyle(
+                          color: Palette.ink,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                     if (owned != null) ...[
                       const SizedBox(width: 8),
-                      Text('x$owned',
-                          style: const TextStyle(
-                              color: Palette.action, fontFamily: 'monospace')),
+                      Text(
+                        'x$owned',
+                        style: const TextStyle(
+                          color: Palette.action,
+                          fontFamily: 'monospace',
+                        ),
+                      ),
                     ],
                   ],
                 ),
                 const SizedBox(height: 2),
-                Text(description,
-                    style: const TextStyle(color: Palette.inkSoft, fontSize: 12)),
+                Text(
+                  description,
+                  style: const TextStyle(color: Palette.inkSoft, fontSize: 12),
+                ),
                 if (lockedReason != null)
-                  Text(lockedReason!,
-                      style: const TextStyle(color: Palette.warn, fontSize: 12)),
+                  Text(
+                    lockedReason!,
+                    style: const TextStyle(color: Palette.warn, fontSize: 12),
+                  ),
               ],
             ),
           ),
@@ -80,8 +94,10 @@ class ShopCard extends StatelessWidget {
                 disabledForegroundColor: Palette.inkFaint,
                 minimumSize: const Size(96, 36),
               ),
-              child: Text(costLabel,
-                  style: const TextStyle(fontFamily: 'monospace', fontSize: 13)),
+              child: Text(
+                costLabel,
+                style: const TextStyle(fontFamily: 'monospace', fontSize: 13),
+              ),
             ),
           ),
         ],
@@ -91,4 +107,5 @@ class ShopCard extends StatelessWidget {
 }
 
 /// Formats a cost in the currency it is paid with, e.g. `1.2K C`.
-String formatCost(double amount, ResourceKind kind) => '${formatNumber(amount)} ${kind.name[0].toUpperCase()}';
+String formatCost(double amount, ResourceKind kind) =>
+    '${formatNumber(amount)} ${kind.name[0].toUpperCase()}';

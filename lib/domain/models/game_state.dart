@@ -9,10 +9,15 @@ import 'save_data.dart';
 class PaperJob {
   double remainingSeconds;
   bool revisionBonus;
+
   /// True while waiting for the half-cost rewrite payment.
   bool awaitingRewrite;
 
-  PaperJob(this.remainingSeconds, {this.revisionBonus = false, this.awaitingRewrite = false});
+  PaperJob(
+    this.remainingSeconds, {
+    this.revisionBonus = false,
+    this.awaitingRewrite = false,
+  });
 }
 
 /// Runtime game state. Everything here maps 1:1 onto [SaveData] except
@@ -25,19 +30,23 @@ class GameState {
   Map<String, double> lifetime = {'counting': 0, 'proofing': 0, 'fame': 0};
   CareerState career = CareerState();
   Map<String, BranchProgress> branches = {};
+
   /// Id of the subject currently receiving theorem credit; '' = none.
   String activeSubjectId = '';
   Map<String, int> producerLevels = {};
   Map<String, int> upgradeLevels = {};
   Set<String> techniques = {};
   List<ConjectureState> conjectures = [];
+
   /// Permanent production multipliers granted by PROVEN conjectures (§4).
   double conjectureCountingMult = 1;
   double conjectureProofingMult = 1;
   double conjectureGlobalMult = 1;
+
   /// Burnout stress 0..1 and active burnout window (section 13.10).
   double stress = 0;
   DateTime? burnedOutUntil;
+
   /// Accepted papers that may be retracted later (section 2).
   List<ScheduledRetraction> scheduledRetractions = [];
   PrestigeState prestige = PrestigeState();
@@ -45,22 +54,29 @@ class GameState {
   int metodoLevel = 1;
   int metodoXp = 0;
   int papersInRun = 0;
+
   /// Cosmetic titles earned by proving open problems (§3 endgame).
   List<String> titles = [];
+
   /// Active optional challenge id ('' = none) — section 7.
   String activeChallenge = '';
+
   /// Challenges already completed; each pays out once.
   List<String> completedChallenges = [];
+
   /// Permanent production boost from completed challenges.
   double challengeGlobalMult = 1;
+
   /// Transient: active writing jobs. Rebuilt from nothing on load.
   List<PaperJob> activePapers = [];
   Settings settings = Settings();
   Stats stats = Stats();
   DateTime savedAt = DateTime.now();
   DateTime lastLoadedAt = DateTime.now();
+
   /// Transient: session start for playtime accounting.
   DateTime sessionStartedAt = DateTime.now();
+
   /// Transient: short-lived HUD notice (never persisted).
   String? transientNotice;
   DateTime? transientNoticeUntil;
@@ -68,7 +84,11 @@ class GameState {
   /// Total gained (current + cumulative) helper used by career gates.
   double lifetimeOf(ResourceKind kind) => lifetime[kind.key] ?? 0;
 
-  void gain(double countingGain, [double proofingGain = 0, double fameGain = 0]) {
+  void gain(
+    double countingGain, [
+    double proofingGain = 0,
+    double fameGain = 0,
+  ]) {
     resources.gain(countingGain, proofingGain, fameGain);
     lifetime['counting'] = (lifetime['counting'] ?? 0) + countingGain;
     lifetime['proofing'] = (lifetime['proofing'] ?? 0) + proofingGain;
@@ -130,7 +150,8 @@ class GameState {
         papersRejected: stats.papersRejected,
         retractions: stats.retractions,
         conjecturesSolved: stats.conjecturesSolved,
-        playtimeMs: stats.playtimeMs + t.difference(sessionStartedAt).inMilliseconds,
+        playtimeMs:
+            stats.playtimeMs + t.difference(sessionStartedAt).inMilliseconds,
       ),
     );
   }
@@ -141,14 +162,16 @@ class GameState {
       ..savedAt = save.savedAt
       ..lastLoadedAt = save.lastLoadedAt
       ..resources = Resources(
-          counting: save.resources.counting,
-          proofing: save.resources.proofing,
-          fame: save.resources.fame)
+        counting: save.resources.counting,
+        proofing: save.resources.proofing,
+        fame: save.resources.fame,
+      )
       ..lifetime = Map.of(save.lifetime)
       ..career = CareerState(
-          stage: save.career.stage,
-          thesisDefended: save.career.thesisDefended,
-          apprentices: save.career.apprentices)
+        stage: save.career.stage,
+        thesisDefended: save.career.thesisDefended,
+        apprentices: save.career.apprentices,
+      )
       ..branches = Map.of(save.branches)
       ..activeSubjectId = save.activeSubjectId
       ..producerLevels = Map.of(save.producerLevels)
@@ -162,15 +185,17 @@ class GameState {
       ..burnedOutUntil = save.burnedOutUntil
       ..scheduledRetractions = List.of(save.scheduledRetractions)
       ..prestige = PrestigeState(
-          legacy: save.prestige.legacy,
-          legacyAllTime: save.prestige.legacyAllTime,
-          prestigesCount: save.prestige.prestigesCount,
-          mathematicians: List.of(save.prestige.mathematicians))
+        legacy: save.prestige.legacy,
+        legacyAllTime: save.prestige.legacyAllTime,
+        prestigesCount: save.prestige.prestigesCount,
+        mathematicians: List.of(save.prestige.mathematicians),
+      )
       ..trend = TrendState(
-          activeSubject: save.trend.activeSubject,
-          endsAt: save.trend.endsAt,
-          nextSubject: save.trend.nextSubject,
-          nextStartsAt: save.trend.nextStartsAt)
+        activeSubject: save.trend.activeSubject,
+        endsAt: save.trend.endsAt,
+        nextSubject: save.trend.nextSubject,
+        nextStartsAt: save.trend.nextStartsAt,
+      )
       ..metodoLevel = save.metodoLevel
       ..metodoXp = save.metodoXp
       ..papersInRun = save.papersInRun
@@ -179,16 +204,18 @@ class GameState {
       ..completedChallenges = List.of(save.completedChallenges)
       ..challengeGlobalMult = save.challengeGlobalMult
       ..settings = Settings(
-          theme: save.settings.theme,
-          sound: save.settings.sound,
-          reducedMotion: save.settings.reducedMotion)
+        theme: save.settings.theme,
+        sound: save.settings.sound,
+        reducedMotion: save.settings.reducedMotion,
+      )
       ..stats = Stats(
-          totalClicks: save.stats.totalClicks,
-          papersPublished: save.stats.papersPublished,
-          papersRejected: save.stats.papersRejected,
-          retractions: save.stats.retractions,
-          conjecturesSolved: save.stats.conjecturesSolved,
-          playtimeMs: save.stats.playtimeMs);
+        totalClicks: save.stats.totalClicks,
+        papersPublished: save.stats.papersPublished,
+        papersRejected: save.stats.papersRejected,
+        retractions: save.stats.retractions,
+        conjecturesSolved: save.stats.conjecturesSolved,
+        playtimeMs: save.stats.playtimeMs,
+      );
     return s;
   }
 }

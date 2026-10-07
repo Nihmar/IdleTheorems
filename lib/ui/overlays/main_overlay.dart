@@ -45,7 +45,9 @@ String? onboardingHint(GameState s) {
     return 'Tap the board to solve your first exercise.';
   }
   var producersOwned = countingProducers.fold<int>(
-      0, (acc, p) => acc + (s.producerLevels[p.id] ?? 0));
+    0,
+    (acc, p) => acc + (s.producerLevels[p.id] ?? 0),
+  );
   if (producersOwned == 0) {
     return 'Open the shop and buy Guided exercises to automate Counting.';
   }
@@ -66,19 +68,22 @@ void _confirmPrestige(BuildContext context, int gain, VoidCallback doIt) {
     context: context,
     builder: (ctx) => AlertDialog(
       title: const Text('Begin a new chapter?'),
-      content:
-          Text('Lifetime Fame converts into $gain Eredità. Producers, branches, '
-              'upgrades, trends and active conjectures all reset.'),
+      content: Text(
+        'Lifetime Fame converts into $gain Eredità. Producers, branches, '
+        'upgrades, trends and active conjectures all reset.',
+      ),
       actions: [
         TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel')),
+          onPressed: () => Navigator.of(ctx).pop(),
+          child: const Text('Cancel'),
+        ),
         FilledButton(
-            onPressed: () {
-              Navigator.of(ctx).pop();
-              doIt();
-            },
-            child: const Text('Prestige')),
+          onPressed: () {
+            Navigator.of(ctx).pop();
+            doIt();
+          },
+          child: const Text('Prestige'),
+        ),
       ],
     ),
   );
@@ -90,11 +95,15 @@ class MainOverlay extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final s = ref.watch(gameStateProvider);
-    final rates = const ProductionSystem()
-        .compute(s, const SubjectService().modifiers(s));
+    final rates = const ProductionSystem().compute(
+      s,
+      const SubjectService().modifiers(s),
+    );
     final services = const SubjectService();
     final trendSvc = const TrendService();
-    final focusDef = s.activeSubjectId.isEmpty ? null : subjectCatalog[s.activeSubjectId];
+    final focusDef = s.activeSubjectId.isEmpty
+        ? null
+        : subjectCatalog[s.activeSubjectId];
     final lastAwayReport = ref.watch(gameStateProvider.notifier).lastAwayReport;
 
     return LayoutBuilder(
@@ -117,137 +126,192 @@ class MainOverlay extends ConsumerWidget {
               top: 0,
               child: SafeArea(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(children: [
-                        Text('Idle Theorems',
+                      Row(
+                        children: [
+                          Text(
+                            'Idle Theorems',
                             style: TextStyle(
-                                color: Palette.accent,
-                                fontSize: 16,
-                                fontStyle: FontStyle.italic,
-                                fontFamily: 'serif')),
-                        const SizedBox(width: 8),
-                        Expanded(
+                              color: Palette.accent,
+                              fontSize: 16,
+                              fontStyle: FontStyle.italic,
+                              fontFamily: 'serif',
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
                             child: SingleChildScrollView(
-                                scrollDirection: Axis.horizontal,
-                                child: Row(children: [
-                              if (s.playerName.isNotEmpty)
-                                _Chip(label: s.playerName,
-                                    icon: Icons.badge_outlined),
-                              const SizedBox(width: 8),
-                              _Chip(label: s.career.stage.label,
-                                  icon: Icons.school_outlined),
-                              const SizedBox(width: 8),
-                              _Chip(label: 'Metodo Lv ${s.metodoLevel}',
-                                  icon: Icons.psychology_alt),
-                              for (final title in s.titles)
-                                _Chip(label: title, icon: Icons.emoji_events),
-                              if (focusDef != null) ...[
-                                const SizedBox(width: 8),
-                                _Chip(
-                                  label:
-                                      '${focusDef.name} ${services.theoremsOf(s, focusDef.id)}/${masteryNeeded(focusDef.level)}',
-                                  icon: Icons.category_outlined,
-                                ),
-                              ],
-                              if (trendSvc.isActive(s)) ...[
-                                const SizedBox(width: 8),
-                                _Chip(
-                                  label: 'Trend: ${subjectCatalog[s.trend.activeSubject]?.name ?? ''}'
-                                      ' · ${s.trend.endsAt!.difference(DateTime.now()).inHours}h',
-                                  icon: Icons.trending_up,
-                                ),
-                              ],
-                              if (trendSvc.shouldAnnounceNext(s)) ...[
-                                const SizedBox(width: 8),
-                                _Chip(
-                                  label: 'Up next: ${subjectCatalog[s.trend.nextSubject]?.name ?? ''}',
-                                  icon: Icons.schedule,
-                                ),
-                              ],
-                            ]))),
-                      ]),
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                children: [
+                                  if (s.playerName.isNotEmpty)
+                                    _Chip(
+                                      label: s.playerName,
+                                      icon: Icons.badge_outlined,
+                                    ),
+                                  const SizedBox(width: 8),
+                                  _Chip(
+                                    label: s.career.stage.label,
+                                    icon: Icons.school_outlined,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  _Chip(
+                                    label: 'Metodo Lv ${s.metodoLevel}',
+                                    icon: Icons.psychology_alt,
+                                  ),
+                                  for (final title in s.titles)
+                                    _Chip(
+                                      label: title,
+                                      icon: Icons.emoji_events,
+                                    ),
+                                  if (focusDef != null) ...[
+                                    const SizedBox(width: 8),
+                                    _Chip(
+                                      label:
+                                          '${focusDef.name} ${services.theoremsOf(s, focusDef.id)}/${masteryNeeded(focusDef.level)}',
+                                      icon: Icons.category_outlined,
+                                    ),
+                                  ],
+                                  if (trendSvc.isActive(s)) ...[
+                                    const SizedBox(width: 8),
+                                    _Chip(
+                                      label:
+                                          'Trend: ${subjectCatalog[s.trend.activeSubject]?.name ?? ''}'
+                                          ' · ${s.trend.endsAt!.difference(DateTime.now()).inHours}h',
+                                      icon: Icons.trending_up,
+                                    ),
+                                  ],
+                                  if (trendSvc.shouldAnnounceNext(s)) ...[
+                                    const SizedBox(width: 8),
+                                    _Chip(
+                                      label:
+                                          'Up next: ${subjectCatalog[s.trend.nextSubject]?.name ?? ''}',
+                                      icon: Icons.schedule,
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                       const SizedBox(height: 8),
-                      Row(children: [
-                        Expanded(
+                      Row(
+                        children: [
+                          Expanded(
                             child: ResourceCounter(
-                                label: 'Counting',
-                                icon: Icons.edit_note,
-                                value: s.resources.counting,
-                                perSecond: rates.countingPerSec)),
-                        const SizedBox(width: 8),
-                        Expanded(
+                              label: 'Counting',
+                              icon: Icons.edit_note,
+                              value: s.resources.counting,
+                              perSecond: rates.countingPerSec,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
                             child: ResourceCounter(
-                                label: 'Proofing',
-                                icon: Icons.menu_book,
-                                value: s.resources.proofing,
-                                perSecond: rates.proofingPerSec)),
-                        const SizedBox(width: 8),
-                        Expanded(
+                              label: 'Proofing',
+                              icon: Icons.menu_book,
+                              value: s.resources.proofing,
+                              perSecond: rates.proofingPerSec,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
                             child: ResourceCounter(
-                                label: 'Fame',
-                                icon: Icons.star,
-                                value: s.resources.fame,
-                                perSecond: rates.famePerSec)),
-                      ]),
+                              label: 'Fame',
+                              icon: Icons.star,
+                              value: s.resources.fame,
+                              perSecond: rates.famePerSec,
+                            ),
+                          ),
+                        ],
+                      ),
                       if (lastAwayReport != null) ...[
                         const SizedBox(height: 8),
                         _AwayBanner(
                           report: lastAwayReport,
-                          onDismiss: () =>
-                              ref
-                                  .read(gameStateProvider.notifier)
-                                  .dismissAwayReport(),
+                          onDismiss: () => ref
+                              .read(gameStateProvider.notifier)
+                              .dismissAwayReport(),
                         ),
                       ],
                       if (s.transientNotice != null ||
                           const FrictionSystem().isBurnedOut(s) ||
                           s.stress > 0.1 ||
-                          s.activeChallenge.isNotEmpty) ...
-                      [
+                          s.activeChallenge.isNotEmpty) ...[
                         const SizedBox(height: 8),
-                        Row(children: [
-                          if (const FrictionSystem().isBurnedOut(s))
-                            _Chip(label: 'Burned out', icon: Icons.battery_alert),
-                          if (!const FrictionSystem().isBurnedOut(s) &&
-                              s.stress > 0.1)
-                            _Chip(
+                        Row(
+                          children: [
+                            if (const FrictionSystem().isBurnedOut(s))
+                              _Chip(
+                                label: 'Burned out',
+                                icon: Icons.battery_alert,
+                              ),
+                            if (!const FrictionSystem().isBurnedOut(s) &&
+                                s.stress > 0.1)
+                              _Chip(
                                 label: 'Stressed ${(s.stress * 100).round()}%',
-                                icon: Icons.sentiment_dissatisfied),
-                          if (s.activeChallenge.isNotEmpty)
-                            _Chip(
-                                label: ChallengeService.catalog[s.activeChallenge]!
+                                icon: Icons.sentiment_dissatisfied,
+                              ),
+                            if (s.activeChallenge.isNotEmpty)
+                              _Chip(
+                                label: ChallengeService
+                                    .catalog[s.activeChallenge]!
                                     .name,
-                                icon: Icons.verified_outlined),
-                          if (s.transientNotice != null)
-                            Expanded(
-                                child:
-                                    Text(s.transientNotice!,
-                                        style: const TextStyle(
-                                            color: Palette.accent,
-                                            fontSize: 13))),
-                        ]),
+                                icon: Icons.verified_outlined,
+                              ),
+                            if (s.transientNotice != null)
+                              Expanded(
+                                child: Text(
+                                  s.transientNotice!,
+                                  style: const TextStyle(
+                                    color: Palette.accent,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
                       ],
                       if (onboardingHint(s) != null) ...[
                         const SizedBox(height: 8),
                         Container(
-                          padding:
-                              const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
                           decoration: BoxDecoration(
                             color: Palette.surfaceAlt,
                             borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: Palette.accent.withValues(alpha: 0.5)),
+                            border: Border.all(
+                              color: Palette.accent.withValues(alpha: 0.5),
+                            ),
                           ),
-                          child: Row(children: [
-                            const Icon(Icons.lightbulb_outline, size: 16, color: Palette.accent),
-                            const SizedBox(width: 8),
-                            Expanded(
-                                child: Text(onboardingHint(s)!,
-                                    style: const TextStyle(
-                                        color: Palette.ink, fontSize: 13))),
-                          ]),
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.lightbulb_outline,
+                                size: 16,
+                                color: Palette.accent,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  onboardingHint(s)!,
+                                  style: const TextStyle(
+                                    color: Palette.ink,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ],
@@ -256,12 +320,7 @@ class MainOverlay extends ConsumerWidget {
               ),
             ),
             // Bottom action bar + slide-up research shop.
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: _BottomBar(h: h),
-            ),
+            Positioned(left: 0, right: 0, bottom: 0, child: _BottomBar(h: h)),
             // First launch: pick your mathematician's name. Blocks the board.
             if (s.playerName.isEmpty)
               const Positioned.fill(child: _NameEntryPanel()),
@@ -286,11 +345,14 @@ class _Chip extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Palette.border),
       ),
-      child: Row(mainAxisSize: MainAxisSize.min, children: [
-        Icon(icon, size: 14, color: Palette.inkSoft),
-        const SizedBox(width: 5),
-        Text(label, style: const TextStyle(color: Palette.ink, fontSize: 12)),
-      ]),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: Palette.inkSoft),
+          const SizedBox(width: 5),
+          Text(label, style: const TextStyle(color: Palette.ink, fontSize: 12)),
+        ],
+      ),
     );
   }
 }
@@ -336,60 +398,81 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
                 ? ListView(
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
                     children: [
-                      Row(children: [
-                        Text(_tab == 'shop'
-                            ? 'Research shop'
-                            : _tab == 'subjects'
+                      Row(
+                        children: [
+                          Text(
+                            _tab == 'shop'
+                                ? 'Research shop'
+                                : _tab == 'subjects'
                                 ? 'Subject tree'
                                 : 'Conjectures',
                             style: const TextStyle(
-                                color: Palette.ink,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold)),
-                        const Spacer(),
-                        _TabButton(
-                          label: 'Shop',
-                          selected: _tab == 'shop',
-                          onTap: () => setState(() => _tab = 'shop'),
-                        ),
-                        const SizedBox(width: 6),
-                        _TabButton(
-                          label: 'Subjects',
-                          selected: _tab == 'subjects',
-                          onTap: () => setState(() => _tab = 'subjects'),
-                        ),
-                        const SizedBox(width: 6),
-                        _TabButton(
-                          label: 'Conjectures',
-                          selected: _tab == 'conjectures',
-                          onTap: () => setState(() => _tab = 'conjectures'),
-                        ),
-                        IconButton(
+                              color: Palette.ink,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const Spacer(),
+                          _TabButton(
+                            label: 'Shop',
+                            selected: _tab == 'shop',
+                            onTap: () => setState(() => _tab = 'shop'),
+                          ),
+                          const SizedBox(width: 6),
+                          _TabButton(
+                            label: 'Subjects',
+                            selected: _tab == 'subjects',
+                            onTap: () => setState(() => _tab = 'subjects'),
+                          ),
+                          const SizedBox(width: 6),
+                          _TabButton(
+                            label: 'Conjectures',
+                            selected: _tab == 'conjectures',
+                            onTap: () => setState(() => _tab = 'conjectures'),
+                          ),
+                          IconButton(
                             onPressed: () => setState(() => _shopOpen = false),
-                            icon: const Icon(Icons.close, color: Palette.inkSoft)),
-                      ]),
+                            icon: const Icon(
+                              Icons.close,
+                              color: Palette.inkSoft,
+                            ),
+                          ),
+                        ],
+                      ),
                       const SizedBox(height: 8),
                       if (_tab == 'shop') ...[
                         if (CareerSystem.nextStageHint(s).isNotEmpty)
                           Padding(
                             padding: const EdgeInsets.only(bottom: 4),
-                            child: Text(CareerSystem.nextStageHint(s),
-                                style: const TextStyle(
-                                    color: Palette.inkSoft, fontSize: 12)),
+                            child: Text(
+                              CareerSystem.nextStageHint(s),
+                              style: const TextStyle(
+                                color: Palette.inkSoft,
+                                fontSize: 12,
+                              ),
+                            ),
                           ),
                         _sectionHeader('Legacy'),
-                        Row(children: [
-                          Text('Eredità ${s.prestige.legacy}',
+                        Row(
+                          children: [
+                            Text(
+                              'Eredità ${s.prestige.legacy}',
                               style: const TextStyle(
-                                  color: Palette.accent,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold)),
-                          const Spacer(),
-                          Text(
+                                color: Palette.accent,
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const Spacer(),
+                            Text(
                               '+${((const PrestigeService().productionMultiplier(s) - 1) * 100).toStringAsFixed(0)}% production',
                               style: const TextStyle(
-                                  color: Palette.inkSoft, fontSize: 12)),
-                        ]),
+                                color: Palette.inkSoft,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
                         ShopCard(
                           name: 'Prestige',
                           description:
@@ -397,10 +480,12 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
                           costLabel:
                               'Needs ${PrestigeService.minLegacyForPrestige}+ from this run',
                           canAfford: const PrestigeService().canPrestige(s),
-                          onBuy: () => _confirmPrestige(context,
-                              ref.read(gameStateProvider.notifier).legacyGainNow,
-                              () =>
-                                  ref.read(gameStateProvider.notifier).prestige()),
+                          onBuy: () => _confirmPrestige(
+                            context,
+                            ref.read(gameStateProvider.notifier).legacyGainNow,
+                            () =>
+                                ref.read(gameStateProvider.notifier).prestige(),
+                          ),
                         ),
                         for (final m in mathematicians)
                           ShopCard(
@@ -411,28 +496,33 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
                                 : '${m.cost} Eredità',
                             canAfford:
                                 !s.prestige.mathematicians.contains(m.id) &&
-                                    s.prestige.legacy >= m.cost,
+                                s.prestige.legacy >= m.cost,
                             onBuy: () => ref
                                 .read(gameStateProvider.notifier)
                                 .hireMathematician(m.id),
                           ),
                         _sectionHeader('Counting'),
-                        for (final p in countingProducers)
-                          _producerRow(p),
+                        for (final p in countingProducers) _producerRow(p),
                         _sectionHeader('Techniques (one-time)'),
                         for (final t in techniqueCatalogList)
                           ShopCard(
                             name: t.name,
                             description: t.description,
-                            costLabel:
-                                s.techniques.contains(t.id) ? 'Owned' : formatCost(t.costCounting, ResourceKind.counting),
-                            canAfford: !s.techniques.contains(t.id) &&
+                            costLabel: s.techniques.contains(t.id)
+                                ? 'Owned'
+                                : formatCost(
+                                    t.costCounting,
+                                    ResourceKind.counting,
+                                  ),
+                            canAfford:
+                                !s.techniques.contains(t.id) &&
                                 s.resources.canAfford(t.costCounting),
-                            onBuy: () => ref.read(gameStateProvider.notifier).buyTechnique(t.id),
+                            onBuy: () => ref
+                                .read(gameStateProvider.notifier)
+                                .buyTechnique(t.id),
                           ),
                         _sectionHeader('Proofing'),
-                        for (final p in proofingProducers)
-                          _producerRow(p),
+                        for (final p in proofingProducers) _producerRow(p),
                         _sectionHeader('Upgrades'),
                         for (final u in upgradeCatalogList)
                           _upgradeRow(u, mods.upgradeCostFactor),
@@ -442,54 +532,89 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
                         for (final def in ChallengeService.catalog.values)
                           _challengeCard(def, s),
                         _sectionHeader('Publication desk'),
-                        _paperDeskRow(balance, mods.paperCostFactor, maxSlots, papersInProgress),
+                        _paperDeskRow(
+                          balance,
+                          mods.paperCostFactor,
+                          maxSlots,
+                          papersInProgress,
+                        ),
                         if (CareerSystem().canDefendThesis(s))
                           ShopCard(
                             name: 'Defend thesis',
-                            description: 'Advance to PhD (requires 1K cumulative Fame).',
-                            costLabel: formatCost(CareerSystem.thesisCostProofing, ResourceKind.proofing),
-                            canAfford: s.resources.canAfford(0, CareerSystem.thesisCostProofing),
-                            onBuy: () => ref.read(gameStateProvider.notifier).defendThesis(),
+                            description:
+                                'Advance to PhD (requires 1K cumulative Fame).',
+                            costLabel: formatCost(
+                              CareerSystem.thesisCostProofing,
+                              ResourceKind.proofing,
+                            ),
+                            canAfford: s.resources.canAfford(
+                              0,
+                              CareerSystem.thesisCostProofing,
+                            ),
+                            onBuy: () => ref
+                                .read(gameStateProvider.notifier)
+                                .defendThesis(),
                           ),
-                        if (s.stress > 0 || const FrictionSystem().isBurnedOut(s))
+                        if (s.stress > 0 ||
+                            const FrictionSystem().isBurnedOut(s))
                           ShopCard(
                             name: 'Sabbatical',
-                            description:
-                                'Take a break: clears all stress instantly (costs 10% of current Fame).',
+                            description: 'Take a break: clears all stress instantly (costs 10% of current Fame).',
                             costLabel: formatCost(
-                                s.resources.fame * FrictionSystem.sabbaticalCostFraction,
-                                ResourceKind.fame),
+                              s.resources.fame *
+                                  FrictionSystem.sabbaticalCostFraction,
+                              ResourceKind.fame,
+                            ),
                             canAfford: s.resources.fame > 0,
-                            onBuy: () => ref.read(gameStateProvider.notifier).takeSabbatical(),
+                            onBuy: () => ref
+                                .read(gameStateProvider.notifier)
+                                .takeSabbatical(),
                           ),
                       ] else if (_tab == 'conjectures') ...[
                         _sectionHeader('Discovery'),
                         const Padding(
                           padding: EdgeInsets.only(bottom: 8),
                           child: Text(
-                              'Formulate in completed fields, fund work sessions, roll at 100%. Failing teaches Metodo — and half the progress survives. Max 2 active discoveries.',
-                              style:
-                                  TextStyle(color: Palette.inkSoft, fontSize: 12, height: 1.5)),
+                            'Formulate in completed fields, fund work sessions, roll at 100%. Failing teaches Metodo — and half the progress survives. Max 2 active discoveries.',
+                            style: TextStyle(
+                              color: Palette.inkSoft,
+                              fontSize: 12,
+                              height: 1.5,
+                            ),
+                          ),
                         ),
-                        for (final def in conjecturesByTier().where((d) => !d.isEndgame))
+                        for (final def in conjecturesByTier().where(
+                          (d) => !d.isEndgame,
+                        ))
                           _conjectureRow(def),
                         _sectionHeader('Frontiers'),
                         const Padding(
                           padding: EdgeInsets.only(bottom: 8),
                           child: Text(
-                              'The great open problems. Sealed until you reach Professor — then they wait forever.',
-                              style:
-                                  TextStyle(color: Palette.inkSoft, fontSize: 12, height: 1.5)),
+                            'The great open problems. Sealed until you reach Professor — then they wait forever.',
+                            style: TextStyle(
+                              color: Palette.inkSoft,
+                              fontSize: 12,
+                              height: 1.5,
+                            ),
+                          ),
                         ),
-                        for (final def in conjecturesByTier().where((d) => d.isEndgame))
+                        for (final def in conjecturesByTier().where(
+                          (d) => d.isEndgame,
+                        ))
                           _conjectureRow(def),
                       ] else ...[
                         _sectionHeader('Your fields of study'),
                         const Padding(
                           padding: EdgeInsets.only(bottom: 8),
                           child: Text(
-                              'Focus a subject: every accepted paper masters one theorem inside it. Mastering a field activates its effect and unlocks the fields that build on it.',
-                              style: TextStyle(color: Palette.inkSoft, fontSize: 12, height: 1.5)),
+                            'Focus a subject: every accepted paper masters one theorem inside it. Mastering a field activates its effect and unlocks the fields that build on it.',
+                            style: TextStyle(
+                              color: Palette.inkSoft,
+                              fontSize: 12,
+                              height: 1.5,
+                            ),
+                          ),
                         ),
                         for (final def in subjectsByLevel())
                           _subjectRow(def, services, s),
@@ -502,34 +627,40 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
         SafeArea(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            child: Row(children: [
-              Expanded(
-                child: FilledButton.icon(
-                  onPressed: () => ref.read(gameStateProvider.notifier).solveExercise(),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: Palette.action,
-                    foregroundColor: Palette.paper,
-                    minimumSize: const Size(0, 48),
-                    textStyle:
-                        const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+            child: Row(
+              children: [
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: () =>
+                        ref.read(gameStateProvider.notifier).solveExercise(),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: Palette.action,
+                      foregroundColor: Palette.paper,
+                      minimumSize: const Size(0, 48),
+                      textStyle: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
+                    ),
+                    icon: const Icon(Icons.edit_note),
+                    label: Text(
+                      'Solve exercise (+${formatNumber(balance.clickPower(s.levelOf('study_tools')) * mods.clickMultiplier * mods.globalResourceMult)})',
+                    ),
                   ),
-                  icon: const Icon(Icons.edit_note),
-                  label: Text(
-                      'Solve exercise (+${formatNumber(balance.clickPower(s.levelOf('study_tools')) * mods.clickMultiplier * mods.globalResourceMult)})'),
                 ),
-              ),
-              const SizedBox(width: 10),
-              OutlinedButton.icon(
-                onPressed: () => setState(() => _shopOpen = !_shopOpen),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Palette.ink,
-                  side: BorderSide(color: Palette.border),
-                  minimumSize: const Size(110, 48),
+                const SizedBox(width: 10),
+                OutlinedButton.icon(
+                  onPressed: () => setState(() => _shopOpen = !_shopOpen),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Palette.ink,
+                    side: BorderSide(color: Palette.border),
+                    minimumSize: const Size(110, 48),
+                  ),
+                  icon: const Icon(Icons.storefront_outlined),
+                  label: const Text('Shop'),
                 ),
-                icon: const Icon(Icons.storefront_outlined),
-                label: const Text('Shop'),
-              ),
-            ]),
+              ],
+            ),
           ),
         ),
       ],
@@ -544,7 +675,10 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
       description: p.description,
       owned: owned,
       costLabel: formatCost(cost, p.currency),
-      canAfford: ref.read(gameStateProvider).resources.canAffordOf(p.currency, cost),
+      canAfford: ref
+          .read(gameStateProvider)
+          .resources
+          .canAffordOf(p.currency, cost),
       onBuy: () => ref.read(gameStateProvider.notifier).buyProducer(p.id),
     );
   }
@@ -557,12 +691,20 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
       description: u.description,
       owned: owned,
       costLabel: formatCost(cost, u.currency),
-      canAfford: ref.read(gameStateProvider).resources.canAffordOf(u.currency, cost),
+      canAfford: ref
+          .read(gameStateProvider)
+          .resources
+          .canAffordOf(u.currency, cost),
       onBuy: () => ref.read(gameStateProvider.notifier).buyUpgrade(u.id),
     );
   }
 
-  Widget _paperDeskRow(BalanceService balance, double discount, int maxSlots, int busy) {
+  Widget _paperDeskRow(
+    BalanceService balance,
+    double discount,
+    int maxSlots,
+    int busy,
+  ) {
     final s = ref.watch(gameStateProvider);
     final allBusy = busy >= maxSlots;
     final cost = balance.paperCost(s.papersInRun) * discount;
@@ -583,7 +725,8 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
     final focused = svc.isActive(s, def.id);
     final mastered = svc.theoremsOf(s, def.id);
     final need = masteryNeeded(def.level);
-    final missing = svc.missingPrereqs(s, def.id)
+    final missing = svc
+        .missingPrereqs(s, def.id)
         .map((id) => subjectCatalog[id]?.name ?? id)
         .join(', ');
     late final String status;
@@ -610,8 +753,10 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
             : Palette.surface,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
-            color:
-                focused ? Palette.accent.withValues(alpha: 0.8) : Palette.border),
+          color: focused
+              ? Palette.accent.withValues(alpha: 0.8)
+              : Palette.border,
+        ),
       ),
       child: Material(
         color: Colors.transparent,
@@ -628,24 +773,49 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
               : null,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            child: Row(children: [
-              Icon(done ? Icons.check_circle : unlocked ? Icons.category_outlined : Icons.lock_outline,
+            child: Row(
+              children: [
+                Icon(
+                  done
+                      ? Icons.check_circle
+                      : unlocked
+                      ? Icons.category_outlined
+                      : Icons.lock_outline,
                   size: 20,
-                  color: statusColor),
-              const SizedBox(width: 10),
-              Expanded(
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(def.name,
-                    style: TextStyle(
-                        color: unlocked || done ? Palette.ink : Palette.inkSoft,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600)),
-                const SizedBox(height: 2),
-                Text(def.effectText,
-                    style: const TextStyle(color: Palette.inkSoft, fontSize: 12)),
-              ])),
-              Text(status, style: TextStyle(color: statusColor, fontSize: 12)),
-            ]),
+                  color: statusColor,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        def.name,
+                        style: TextStyle(
+                          color: unlocked || done
+                              ? Palette.ink
+                              : Palette.inkSoft,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        def.effectText,
+                        style: const TextStyle(
+                          color: Palette.inkSoft,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Text(
+                  status,
+                  style: TextStyle(color: statusColor, fontSize: 12),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -683,7 +853,8 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
       statusText = 'Unlocks at Postdoc';
       statusColor = Palette.inkFaint;
     } else if (missing.isNotEmpty) {
-      statusText = 'Needs: ${missing.map((id) => subjectCatalog[id]?.name ?? id).join(', ')}';
+      statusText =
+          'Needs: ${missing.map((id) => subjectCatalog[id]?.name ?? id).join(', ')}';
       statusColor = Palette.inkFaint;
     } else {
       statusText = '';
@@ -699,12 +870,19 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
       'Reward: ${def.rewardSummary}',
     ].join('  ·  ');
 
-    final canStart = !proven && !cooling && !active && svc.canFormulate(s, def.id);
+    final canStart =
+        !proven && !cooling && !active && svc.canFormulate(s, def.id);
     final slotsFree = svc.slotsAvailable(s, def.id);
-    final formCost =
-        _costLabel(def.formulation.counting, def.formulation.proofing, def.formulation.fame);
-    final workCost =
-        _costLabel(def.workPerSession.counting, def.workPerSession.proofing, def.workPerSession.fame);
+    final formCost = _costLabel(
+      def.formulation.counting,
+      def.formulation.proofing,
+      def.formulation.fame,
+    );
+    final workCost = _costLabel(
+      def.workPerSession.counting,
+      def.workPerSession.proofing,
+      def.workPerSession.fame,
+    );
     final n = ref.read(gameStateProvider.notifier);
 
     return Container(
@@ -713,87 +891,123 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
         color: proven ? Palette.surfaceAlt : Palette.surface,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
-            color: proven
-                ? Palette.accent.withValues(alpha: 0.8)
-                : Palette.border),
+          color: proven
+              ? Palette.accent.withValues(alpha: 0.8)
+              : Palette.border,
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        child: Column(children: [
-          Row(children: [
-            Icon(proven
-                    ? Icons.verified
-                    : cooling
-                        ? Icons.hourglass_bottom
-                        : active
-                            ? Icons.edit_note
-                            : Icons.science_outlined,
-                size: 20,
-                color: statusColor),
-            const SizedBox(width: 10),
-            Expanded(
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(def.name,
-                  style: const TextStyle(
-                      color: Palette.ink,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600)),
-              const SizedBox(height: 2),
-              Text(subLine,
-                  style: const TextStyle(color: Palette.inkSoft, fontSize: 12)),
-            ])),
-            Flexible(
-                child: Text(statusText,
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Icon(
+                  proven
+                      ? Icons.verified
+                      : cooling
+                      ? Icons.hourglass_bottom
+                      : active
+                      ? Icons.edit_note
+                      : Icons.science_outlined,
+                  size: 20,
+                  color: statusColor,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        def.name,
+                        style: const TextStyle(
+                          color: Palette.ink,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        subLine,
+                        style: const TextStyle(
+                          color: Palette.inkSoft,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Flexible(
+                  child: Text(
+                    statusText,
                     textAlign: TextAlign.right,
-                    style: TextStyle(color: statusColor, fontSize: 12))),
-          ]),
-          if (active && st != null) ...[
-            const SizedBox(height: 8),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: LinearProgressIndicator(
+                    style: TextStyle(color: statusColor, fontSize: 12),
+                  ),
+                ),
+              ],
+            ),
+            if (active && st != null) ...[
+              const SizedBox(height: 8),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
                   value: st.progress / 100,
                   minHeight: 6,
                   backgroundColor: Palette.surfaceAlt,
-                  valueColor:
-                      const AlwaysStoppedAnimation<Color>(Palette.action)),
-            ),
-            const SizedBox(height: 8),
-            Align(
+                  valueColor: const AlwaysStoppedAnimation<Color>(
+                    Palette.action,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Align(
                 alignment: Alignment.centerRight,
                 child: OutlinedButton.icon(
-                    onPressed: s.resources.canAfford(
-                            def.workPerSession.counting,
-                            def.workPerSession.proofing,
-                            def.workPerSession.fame)
-                        ? () => n.workOnConjecture(def.id)
-                        : null,
-                    style: OutlinedButton.styleFrom(
-                        minimumSize: const Size(0, 34),
-                        foregroundColor: Palette.ink),
-                    icon: const Icon(Icons.play_arrow, size: 18),
-                    label: Text('Work session ($workCost)'))),
-          ],
-          if (canStart) ...[
-            const SizedBox(height: 8),
-            Align(
+                  onPressed:
+                      s.resources.canAfford(
+                        def.workPerSession.counting,
+                        def.workPerSession.proofing,
+                        def.workPerSession.fame,
+                      )
+                      ? () => n.workOnConjecture(def.id)
+                      : null,
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(0, 34),
+                    foregroundColor: Palette.ink,
+                  ),
+                  icon: const Icon(Icons.play_arrow, size: 18),
+                  label: Text('Work session ($workCost)'),
+                ),
+              ),
+            ],
+            if (canStart) ...[
+              const SizedBox(height: 8),
+              Align(
                 alignment: Alignment.centerRight,
                 child: FilledButton.icon(
-                    onPressed: slotsFree &&
-                            s.resources.canAfford(
-                                def.formulation.counting,
-                                def.formulation.proofing,
-                                def.formulation.fame)
-                        ? () => n.formulateConjecture(def.id)
-                        : null,
-                    style: FilledButton.styleFrom(
-                        backgroundColor: Palette.action,
-                        foregroundColor: Palette.paper,
-                        minimumSize: const Size(0, 34)),
-                    icon: const Icon(Icons.add_circle_outline, size: 18),
-                    label: Text(slotsFree ? 'Formulate ($formCost)' : 'Slots full'))),
+                  onPressed:
+                      slotsFree &&
+                          s.resources.canAfford(
+                            def.formulation.counting,
+                            def.formulation.proofing,
+                            def.formulation.fame,
+                          )
+                      ? () => n.formulateConjecture(def.id)
+                      : null,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Palette.action,
+                    foregroundColor: Palette.paper,
+                    minimumSize: const Size(0, 34),
+                  ),
+                  icon: const Icon(Icons.add_circle_outline, size: 18),
+                  label: Text(
+                    slotsFree ? 'Formulate ($formCost)' : 'Slots full',
+                  ),
+                ),
+              ),
+            ],
           ],
-        ]),
+        ),
       ),
     );
   }
@@ -806,8 +1020,7 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
     if (s.career.stage != CareerStage.professor) {
       return ShopCard(
         name: 'Your laboratory',
-        description:
-            'As a Professor you may recruit students who grind Counting automatically.',
+        description: 'As a Professor you may recruit students who grind Counting automatically.',
         costLabel: 'Unlocks at Professor',
         canAfford: false,
         onBuy: () {},
@@ -828,9 +1041,16 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
       name: 'Recruit ${next.name}',
       description:
           '${next.bio} Adds +${next.countingPerSec.toStringAsFixed(0)} Counting/s.',
-      costLabel: _costLabel(next.costCounting, next.costProofing, next.costFame),
+      costLabel: _costLabel(
+        next.costCounting,
+        next.costProofing,
+        next.costFame,
+      ),
       canAfford: s.resources.canAfford(
-          next.costCounting, next.costProofing, next.costFame),
+        next.costCounting,
+        next.costProofing,
+        next.costFame,
+      ),
       onBuy: () => ref.read(gameStateProvider.notifier).hireApprentice(),
     );
   }
@@ -870,8 +1090,9 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
       costLabel: costLabel,
       canAfford: canAfford,
       onBuy: buy,
-      lockedReason:
-          locked && !completed ? 'Unlocks after completing Cryptography' : null,
+      lockedReason: locked && !completed
+          ? 'Unlocks after completing Cryptography'
+          : null,
     );
   }
 
@@ -894,11 +1115,16 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
   }
 
   Widget _sectionHeader(String title) => Padding(
-        padding: const EdgeInsets.only(top: 12, bottom: 6),
-        child: Text(title.toUpperCase(),
-            style: const TextStyle(
-                color: Palette.action, fontSize: 12, letterSpacing: 1.2)),
-      );
+    padding: const EdgeInsets.only(top: 12, bottom: 6),
+    child: Text(
+      title.toUpperCase(),
+      style: const TextStyle(
+        color: Palette.action,
+        fontSize: 12,
+        letterSpacing: 1.2,
+      ),
+    ),
+  );
 }
 
 /// Transient banner listing what was earned while the app stayed in the
@@ -918,25 +1144,33 @@ class _AwayBanner extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: Palette.accent.withValues(alpha: 0.5)),
       ),
-      child: Row(children: [
-        const Icon(Icons.hourglass_empty, size: 16, color: Palette.accent),
-        const SizedBox(width: 8),
-        Expanded(
+      child: Row(
+        children: [
+          const Icon(Icons.hourglass_empty, size: 16, color: Palette.accent),
+          const SizedBox(width: 8),
+          Expanded(
             child: Text(
-                'While you were away: +${formatNumber(report.gained.counting)} C \u00b7 +${formatNumber(report.gained.proofing)} P \u00b7 +${formatNumber(report.gained.fame)} F',
-                style:
-                    const TextStyle(color: Palette.ink, fontSize: 13))),
-        IconButton(
+              'While you were away: +${formatNumber(report.gained.counting)} C \u00b7 +${formatNumber(report.gained.proofing)} P \u00b7 +${formatNumber(report.gained.fame)} F',
+              style: const TextStyle(color: Palette.ink, fontSize: 13),
+            ),
+          ),
+          IconButton(
             onPressed: onDismiss,
-            icon: const Icon(Icons.close, size: 16, color: Palette.inkSoft)),
-      ]),
+            icon: const Icon(Icons.close, size: 16, color: Palette.inkSoft),
+          ),
+        ],
+      ),
     );
   }
 }
 
 /// Small pill-style tab switcher used by the research panel header.
 class _TabButton extends StatelessWidget {
-  const _TabButton({required this.label, required this.selected, required this.onTap});
+  const _TabButton({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
 
   final String label;
   final bool selected;
@@ -949,16 +1183,24 @@ class _TabButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
-          color: selected ? Palette.accent.withValues(alpha: 0.18) : Colors.transparent,
+          color: selected
+              ? Palette.accent.withValues(alpha: 0.18)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-              color: selected ? Palette.accent.withValues(alpha: 0.6) : Palette.ink.withValues(alpha: 0.2)),
+            color: selected
+                ? Palette.accent.withValues(alpha: 0.6)
+                : Palette.ink.withValues(alpha: 0.2),
+          ),
         ),
-        child: Text(label,
-            style: TextStyle(
-                color: selected ? Palette.accent : Palette.inkSoft,
-                fontSize: 12,
-                fontWeight: FontWeight.bold)),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: selected ? Palette.accent : Palette.inkSoft,
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ),
     );
   }
@@ -978,8 +1220,16 @@ class _NameEntryPanelState extends ConsumerState<_NameEntryPanel> {
   final TextEditingController _controller = TextEditingController();
 
   static const List<String> _suggestions = [
-    'Ada', 'Blaise', 'Emmy', 'Srinivasa', 'Karl', 'Sophie',
-    'Maryam', 'Per', 'Léonore', 'Évariste',
+    'Ada',
+    'Blaise',
+    'Emmy',
+    'Srinivasa',
+    'Karl',
+    'Sophie',
+    'Maryam',
+    'Per',
+    'Léonore',
+    'Évariste',
   ];
 
   @override
@@ -1017,47 +1267,66 @@ class _NameEntryPanelState extends ConsumerState<_NameEntryPanel> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                  const Icon(Icons.badge_outlined, color: Palette.accent, size: 28),
-                  const SizedBox(width: 10),
-                  Flexible(
-                      child: Text('A new career begins',
-                          style: TextStyle(
-                              color: Palette.accent,
-                              fontSize: 20,
-                              fontStyle: FontStyle.italic,
-                              fontFamily: 'serif')))
-                ]),
-                const SizedBox(height: 12),
-                const Text(
-                    'Every great mathematician starts with a name.\nWhat shall your colleagues call you?',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Palette.inkSoft, fontSize: 13, height: 1.5)),
-                const SizedBox(height: 16),
-                Row(children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _controller,
-                      autofocus: true,
-                      textCapitalization: TextCapitalization.words,
-                      onSubmitted: (_) => _confirm(),
-                      decoration: InputDecoration(
-                        hintText: 'e.g. Ada Lovelace',
-                        counterText: '',
-                        filled: true,
-                        fillColor: Palette.surface,
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10)),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.badge_outlined,
+                      color: Palette.accent,
+                      size: 28,
+                    ),
+                    const SizedBox(width: 10),
+                    Flexible(
+                      child: Text(
+                        'A new career begins',
+                        style: TextStyle(
+                          color: Palette.accent,
+                          fontSize: 20,
+                          fontStyle: FontStyle.italic,
+                          fontFamily: 'serif',
+                        ),
                       ),
                     ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Every great mathematician starts with a name.\nWhat shall your colleagues call you?',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Palette.inkSoft,
+                    fontSize: 13,
+                    height: 1.5,
                   ),
-                  const SizedBox(width: 8),
-                  IconButton(
-                    onPressed: _randomize,
-                    tooltip: 'Roll a famous first name',
-                    icon: const Icon(Icons.casino, color: Palette.inkSoft),
-                  ),
-                ]),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _controller,
+                        autofocus: true,
+                        textCapitalization: TextCapitalization.words,
+                        onSubmitted: (_) => _confirm(),
+                        decoration: InputDecoration(
+                          hintText: 'e.g. Ada Lovelace',
+                          counterText: '',
+                          filled: true,
+                          fillColor: Palette.surface,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      onPressed: _randomize,
+                      tooltip: 'Roll a famous first name',
+                      icon: const Icon(Icons.casino, color: Palette.inkSoft),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 16),
                 FilledButton(
                   onPressed: () => _confirm(),
@@ -1065,8 +1334,10 @@ class _NameEntryPanelState extends ConsumerState<_NameEntryPanel> {
                     backgroundColor: Palette.action,
                     foregroundColor: Palette.paper,
                     minimumSize: const Size(0, 48),
-                    textStyle:
-                        const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                    textStyle: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
                   ),
                   child: const Text('Begin my career'),
                 ),

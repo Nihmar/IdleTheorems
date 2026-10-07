@@ -18,13 +18,14 @@ void main() {
       original.techniques.add('elementary_formalization');
       original.producerLevels['guided_exercises'] = 3;
 
-      final restored =
-          SaveData.fromJson(original.toJson());
+      final restored = SaveData.fromJson(original.toJson());
 
       expect(restored.version, SaveData.currentVersion);
       expect(restored.playerName, 'Ada Lovelace');
-      expect(restored.savedAt.millisecondsSinceEpoch,
-          DateTime.utc(2026, 1, 1).millisecondsSinceEpoch);
+      expect(
+        restored.savedAt.millisecondsSinceEpoch,
+        DateTime.utc(2026, 1, 1).millisecondsSinceEpoch,
+      );
       expect(restored.resources.counting, 12.5);
       expect(restored.resources.proofing, 3);
       expect(restored.prestige.legacy, 7);
@@ -51,13 +52,13 @@ void main() {
       expect(restored.papersInRun, 0);
     });
 
-    test('persists the focused research subject and tolerates its absence',
-        () {
+    test('persists the focused research subject and tolerates its absence', () {
       final t = DateTime.utc(2026, 1, 1);
       final withFocus = SaveData.fresh(t)..activeSubjectId = 'analysis';
       expect(SaveData.fromJson(withFocus.toJson()).activeSubjectId, 'analysis');
 
-      final legacyJson = SaveData.fresh(t).toJson()..remove('active_subject_id');
+      final legacyJson = SaveData.fresh(t).toJson()
+        ..remove('active_subject_id');
       expect(SaveData.fromJson(legacyJson).activeSubjectId, '');
     });
 

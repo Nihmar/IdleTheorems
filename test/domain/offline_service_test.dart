@@ -26,8 +26,14 @@ void main() {
 
       final report = const OfflineService().compute(save, now);
 
-      expect(report.secondsApplied, closeTo(3600 * BalanceService.offlineEfficiency, 0.001));
-      expect(report.gained.counting, closeTo(countingRate(s) * report.secondsApplied, 1e-6));
+      expect(
+        report.secondsApplied,
+        closeTo(3600 * BalanceService.offlineEfficiency, 0.001),
+      );
+      expect(
+        report.gained.counting,
+        closeTo(countingRate(s) * report.secondsApplied, 1e-6),
+      );
     });
 
     test('caps at the offline window (4h default)', () {
@@ -40,7 +46,11 @@ void main() {
 
       expect(
         report.secondsApplied,
-        closeTo(BalanceService.offlineCapDefault.inSeconds * BalanceService.offlineEfficiency, 0.001),
+        closeTo(
+          BalanceService.offlineCapDefault.inSeconds *
+              BalanceService.offlineEfficiency,
+          0.001,
+        ),
       );
     });
 
@@ -61,7 +71,11 @@ void main() {
         ..lastLoadedAt = now.subtract(const Duration(hours: 11));
 
       final base = const OfflineService().compute(save, now);
-      final doubled = const OfflineService().compute(save, now, capMultiplier: 2);
+      final doubled = const OfflineService().compute(
+        save,
+        now,
+        capMultiplier: 2,
+      );
 
       expect(doubled.secondsApplied, closeTo(base.secondsApplied * 2, 0.001));
     });

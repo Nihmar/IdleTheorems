@@ -29,7 +29,9 @@ class TrendService {
 
   /// True when [subjectId] is the currently trending field.
   bool isTrending(GameState s, String subjectId, [DateTime? now]) =>
-      subjectId.isNotEmpty && s.trend.activeSubject == subjectId && isActive(s, now);
+      subjectId.isNotEmpty &&
+      s.trend.activeSubject == subjectId &&
+      isActive(s, now);
 
   /// True when the next rotation should be announced: inside the 24 h
   /// telegraph window, or always once Statistics is mastered (it reveals
@@ -76,9 +78,12 @@ class TrendService {
     if (!isActive(s, tNow)) {
       final start = t.nextStartsAt;
       final stale = start != null && start.isBefore(tNow.subtract(rotation));
-      final begin = (start == null || start.isAfter(tNow) || stale) ? tNow : start;
-      t.activeSubject =
-          t.nextSubject.isNotEmpty ? t.nextSubject : _pick(_candidates(s), begin);
+      final begin = (start == null || start.isAfter(tNow) || stale)
+          ? tNow
+          : start;
+      t.activeSubject = t.nextSubject.isNotEmpty
+          ? t.nextSubject
+          : _pick(_candidates(s), begin);
       t.endsAt = begin.add(rotation);
       _assignNext(s, t, tNow); // re-anchor the telegraph to the new window
     } else if (t.nextSubject.isEmpty || t.nextStartsAt == null) {

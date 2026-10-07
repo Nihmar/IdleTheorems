@@ -15,8 +15,13 @@ void main() {
 
     test('proofing-denominated cost checks proofing, not counting', () {
       expect(r.canAffordOf(ResourceKind.proofing, 50), isFalse);
-      expect(Resources(counting: 0, proofing: 50)
-          .canAffordOf(ResourceKind.proofing, 50), isTrue);
+      expect(
+        Resources(
+          counting: 0,
+          proofing: 50,
+        ).canAffordOf(ResourceKind.proofing, 50),
+        isTrue,
+      );
     });
 
     test('fame-denominated cost checks fame, not counting', () {

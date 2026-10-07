@@ -22,7 +22,7 @@ class CareerSystem {
         return s.career.thesisDefended
             ? ''
             : 'PhD: defend your thesis once lifetime Fame reaches '
-                '${formatNumber(phdFameThreshold)}.';
+                  '${formatNumber(phdFameThreshold)}.';
       case CareerStage.phd:
         return 'Postdoc at ${formatNumber(postdocFameThreshold)} lifetime Fame '
             '(${formatNumber(s.lifetimeOf(ResourceKind.fame))} so far).';
