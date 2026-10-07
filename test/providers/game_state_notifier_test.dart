@@ -211,4 +211,23 @@ void main() {
       expect(container.read(gameStateProvider).stats.conjecturesSolved, 1);
     });
   });
+
+  group('prestige conversion', () {
+    test('completed Algebraic Topology boosts the Fame-to-Legacy conversion',
+        () {
+      final s = container.read(gameStateProvider);
+      s.lifetime['fame'] = 1e6; // -> floor(sqrt(1e4)) = 100 base gain
+      s.branches['algebraic_topology'] = BranchProgress(completed: true);
+      expect(notifier.legacyGainNow, 125);
+      final bankBefore = s.prestige.legacy;
+      expect(notifier.prestige(), isTrue);
+      expect(container.read(gameStateProvider).prestige.legacy, bankBefore + 125);
+    });
+
+    test('without completed subjects the conversion stays at baseline', () {
+      final s = container.read(gameStateProvider);
+      s.lifetime['fame'] = 1e6;
+      expect(notifier.legacyGainNow, 100);
+    });
+  });
 }

@@ -197,14 +197,20 @@ class GameStateNotifier extends Notifier<GameState> {
 
   // ------------------------------------------------------------ prestige
 
+  /// Combined Fame->Eredità conversion factor: completed-subject bonuses
+  /// (e.g. Algebraic Topology +25%) times any active challenge factor.
+  double prestigeLegacyFactor() =>
+      _challenges.prestigeLegacyFactor(state) *
+          _subjects.modifiers(state).legacyGainMult;
+
   int get legacyGainNow =>
-      (_prestige.legacyGain(state) * _challenges.prestigeLegacyFactor(state)).round();
+      (_prestige.legacyGain(state) * prestigeLegacyFactor()).round();
 
   /// Reboots the run into Legacy points (sections 6 and 13.9). Completes
   /// any active challenge on the way out (section 7).
   bool prestige() {
     if (!_prestige.canPrestige(state)) return false;
-    final factor = _challenges.prestigeLegacyFactor(state);
+    final factor = prestigeLegacyFactor();
     final gain = (_prestige.legacyGain(state) * factor).round();
     _prestige.applyPrestige(state, factor);
     var message = '+$gain Eredità — a new chapter begins.';
