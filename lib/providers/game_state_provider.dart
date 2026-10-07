@@ -21,8 +21,9 @@ import '../game/systems/trend_service.dart';
 import '../game/systems/production_system.dart';
 import '../game/systems/review_service.dart';
 
-final gameStateProvider =
-    NotifierProvider<GameStateNotifier, GameState>(GameStateNotifier.new);
+final gameStateProvider = NotifierProvider<GameStateNotifier, GameState>(
+  GameStateNotifier.new,
+);
 
 /// Central mutable game state. All gameplay actions funnel through this
 /// notifier; systems stay pure and are injected here.
@@ -65,7 +66,11 @@ class GameStateNotifier extends Notifier<GameState> {
   void bootstrap(GameState loaded, {Resources? offlineGains}) {
     state = loaded..sessionStartedAt = DateTime.now();
     if (offlineGains != null && offlineGains.total > 0) {
-      state.gain(offlineGains.counting, offlineGains.proofing, offlineGains.fame);
+      state.gain(
+        offlineGains.counting,
+        offlineGains.proofing,
+        offlineGains.fame,
+      );
     }
     _refresh();
   }
@@ -79,11 +84,16 @@ class GameStateNotifier extends Notifier<GameState> {
   /// [frozenSnapshot] is the state as saved at the moment of leaving.
   void applyAwayEarnings(SaveData frozenSnapshot, DateTime now) {
     final report = const OfflineService().compute(
-        frozenSnapshot,
-        now,
-        capMultiplier: _subjects.modifiers(state).offlineCapMult);
+      frozenSnapshot,
+      now,
+      capMultiplier: _subjects.modifiers(state).offlineCapMult,
+    );
     if (report.secondsApplied <= 0 || report.gained.total <= 0) return;
-    state.gain(report.gained.counting, report.gained.proofing, report.gained.fame);
+    state.gain(
+      report.gained.counting,
+      report.gained.proofing,
+      report.gained.fame,
+    );
     if (report.secondsApplied >= 1) lastAwayReport = report;
     _refresh();
   }
@@ -108,9 +118,12 @@ class GameStateNotifier extends Notifier<GameState> {
   /// One manual exercise solve (the idle "click").
   void solveExercise() {
     final m = _subjects.modifiers(state);
-    final power = _balance.clickPower(state.levelOf('study_tools')) *
-        m.clickMultiplier * m.globalResourceMult *
-        state.conjectureCountingMult * state.conjectureGlobalMult;
+    final power =
+        _balance.clickPower(state.levelOf('study_tools')) *
+        m.clickMultiplier *
+        m.globalResourceMult *
+        state.conjectureCountingMult *
+        state.conjectureGlobalMult;
     state.gain(power);
     // No-Paper Run: every solved exercise also earns Fame directly (§7).
     final clickFame = _challenges.clickFame(state);
@@ -146,7 +159,8 @@ class GameStateNotifier extends Notifier<GameState> {
     final level = state.levelOf(id);
     if (def.maxLevel >= 0 && level >= def.maxLevel) return false;
     final cost =
-        _balance.upgradeCost(def, level) * _subjects.modifiers(state).upgradeCostFactor;
+        _balance.upgradeCost(def, level) *
+        _subjects.modifiers(state).upgradeCostFactor;
     if (!_spendByKind(def.currency, cost)) {
       return false;
     }
@@ -190,7 +204,8 @@ class GameStateNotifier extends Notifier<GameState> {
     final def = _apprentices.hire(state);
     if (def == null) return false;
     _notice(
-        '${def.name} joins your laboratory (+${def.countingPerSec.toStringAsFixed(0)} Counting/s).');
+      '${def.name} joins your laboratory (+${def.countingPerSec.toStringAsFixed(0)} Counting/s).',
+    );
     _afterMutation();
     return true;
   }
@@ -201,7 +216,7 @@ class GameStateNotifier extends Notifier<GameState> {
   /// (e.g. Algebraic Topology +25%) times any active challenge factor.
   double prestigeLegacyFactor() =>
       _challenges.prestigeLegacyFactor(state) *
-          _subjects.modifiers(state).legacyGainMult;
+      _subjects.modifiers(state).legacyGainMult;
 
   int get legacyGainNow =>
       (_prestige.legacyGain(state) * prestigeLegacyFactor()).round();
@@ -275,8 +290,11 @@ class GameStateNotifier extends Notifier<GameState> {
         : 0.0;
     final titlesBefore = state.titles.length;
     final outcome = _conjectures.workSession(
-        state, id,
-        trendBonus: trendBonus, ramanujanBonus: ramanujanBonus);
+      state,
+      id,
+      trendBonus: trendBonus,
+      ramanujanBonus: ramanujanBonus,
+    );
     if (outcome != null) {
       if (outcome == ConjectureOutcome.refuted) {
         _gainMethodXp(d.failureMethodXp);
@@ -284,7 +302,8 @@ class GameStateNotifier extends Notifier<GameState> {
         state.stats.conjecturesSolved++;
         if (state.titles.length > titlesBefore) {
           _notice(
-              '${d.name} is PROVEN — "${state.titles.last}" joins your legend.');
+            '${d.name} is PROVEN — "${state.titles.last}" joins your legend.',
+          );
         } else {
           _notice('You proved ${d.name}!');
         }
@@ -302,8 +321,10 @@ class GameStateNotifier extends Notifier<GameState> {
       _notice(msg);
     }
     if (state.stats.retractions > retractionsBefore) {
-      _gainMethodXp(FrictionSystem.retractionMethodXp *
-          (state.stats.retractions - retractionsBefore));
+      _gainMethodXp(
+        FrictionSystem.retractionMethodXp *
+            (state.stats.retractions - retractionsBefore),
+      );
     }
     _expireNotice();
     _trend.update(state);

@@ -9,12 +9,16 @@ class ChallengeDef {
   final String id;
   final String name;
   final String description;
+
   /// Encrypted Run stays sealed until Cryptography is completed (§3).
   final bool requiresCryptography;
+
   /// Flat Legacy points granted on completion.
   final int legacyOnComplete;
+
   /// Cosmetic title granted on completion (null = none).
   final String? title;
+
   /// Permanent global production multiplier granted on completion (1 = none).
   final double globalMultOnComplete;
 
@@ -51,24 +55,21 @@ class ChallengeService {
     constructivistRun: ChallengeDef(
       id: constructivistRun,
       name: 'Constructivist Run',
-      description:
-          'Your laboratory runs lean: passive production drops by half, but your own papers earn double Fame.',
+      description: 'Your laboratory runs lean: passive production drops by half, but your own papers earn double Fame.',
       legacyOnComplete: 25,
       title: 'The Constructivist',
     ),
     noPaperRun: ChallengeDef(
       id: noPaperRun,
       name: 'No-Paper Run',
-      description:
-          'You never submit another paper — the desk closes. Every solved exercise earns +5 Fame directly instead.',
+      description: 'You never submit another paper — the desk closes. Every solved exercise earns +5 Fame directly instead.',
       legacyOnComplete: 50,
       title: 'Oral Tradition',
     ),
     encryptedRun: ChallengeDef(
       id: encryptedRun,
       name: 'Encrypted Run',
-      description:
-          'Work in secret: stress builds twice as fast, but prestigising yields double Eredità.',
+      description: 'Work in secret: stress builds twice as fast, but prestigising yields double Eredità.',
       requiresCryptography: true,
       legacyOnComplete: 100,
       title: 'Cipher Keeper',

@@ -28,8 +28,10 @@ void main() {
     final before = container.read(gameStateProvider).resources.counting;
     notifier.solveExercise();
     final after = container.read(gameStateProvider);
-    expect(after.resources.counting - before,
-        closeTo(const BalanceService().clickPower(0), 1e-9));
+    expect(
+      after.resources.counting - before,
+      closeTo(const BalanceService().clickPower(0), 1e-9),
+    );
     expect(after.stats.totalClicks, 1);
   });
 
@@ -73,7 +75,11 @@ void main() {
     notifier.state.resources.proofing = 1e9; // rewrites always affordable
     notifier.startPaper();
 
-    for (var i = 0; i < 200 && container.read(gameStateProvider).activePapers.isNotEmpty; i++) {
+    for (
+      var i = 0;
+      i < 200 && container.read(gameStateProvider).activePapers.isNotEmpty;
+      i++
+    ) {
       notifier.tick(PaperConfig.writeDurationSeconds);
     }
 
@@ -91,21 +97,30 @@ void main() {
   test('completed geometry discounts the paper cost', () {
     const balance = BalanceService();
     final base = balance.paperCost(0);
-    notifier.state.branches['geometry'] =
-        BranchProgress(completed: true, theoremsMastered: 8);
+    notifier.state.branches['geometry'] = BranchProgress(
+      completed: true,
+      theoremsMastered: 8,
+    );
     notifier.state.resources.proofing = base * 0.95; // covers discount only
     expect(notifier.startPaper(), isTrue);
-    expect(container.read(gameStateProvider).resources.proofing,
-        closeTo(base * 0.05, 1e-9));
+    expect(
+      container.read(gameStateProvider).resources.proofing,
+      closeTo(base * 0.05, 1e-9),
+    );
   });
 
   test('completed logic & sets multiplies click power by 1.10', () {
-    notifier.state.branches['logic_sets'] =
-        BranchProgress(completed: true, theoremsMastered: 4);
+    notifier.state.branches['logic_sets'] = BranchProgress(
+      completed: true,
+      theoremsMastered: 4,
+    );
     final before = container.read(gameStateProvider).resources.counting;
     notifier.solveExercise();
     final after = container.read(gameStateProvider).resources.counting;
-    expect(after - before, closeTo(const BalanceService().clickPower(0) * 1.10, 1e-9));
+    expect(
+      after - before,
+      closeTo(const BalanceService().clickPower(0) * 1.10, 1e-9),
+    );
   });
 
   test('focusing a subject masters it through accepted papers', () {
@@ -135,13 +150,14 @@ void main() {
 
     notifier.applyAwayEarnings(snapshot, t0.add(const Duration(hours: 1)));
 
-    final expected = const ProductionSystem()
-        .compute(notifier.state)
-        .countingPerSec *
+    final expected =
+        const ProductionSystem().compute(notifier.state).countingPerSec *
         3600 *
         0.5;
-    expect(container.read(gameStateProvider).resources.counting - before,
-        closeTo(expected, 1e-6));
+    expect(
+      container.read(gameStateProvider).resources.counting - before,
+      closeTo(expected, 1e-6),
+    );
     expect(notifier.lastAwayReport, isNotNull);
     notifier.dismissAwayReport();
     expect(notifier.lastAwayReport, isNull);
@@ -160,13 +176,16 @@ void main() {
 
     test('a fired retraction grants Metodo XP', () {
       notifier.state.resources.gain(0, 0, 1000);
-      notifier.state.scheduledRetractions
-          .add(ScheduledRetraction(DateTime.now()));
+      notifier.state.scheduledRetractions.add(
+        ScheduledRetraction(DateTime.now()),
+      );
       notifier.tick(1);
       final s = container.read(gameStateProvider);
       expect(s.stats.retractions, 1);
-      expect(s.metodoXp,
-          greaterThanOrEqualTo(FrictionSystem.retractionMethodXp));
+      expect(
+        s.metodoXp,
+        greaterThanOrEqualTo(FrictionSystem.retractionMethodXp),
+      );
     });
   });
 
@@ -198,31 +217,39 @@ void main() {
         if (st.status == ConjectureStatus.proven) break;
         if (st.status == ConjectureStatus.refuted) {
           // Failure must have granted Metodo XP (10 x tier).
-          expect(container.read(gameStateProvider).metodoXp,
-              greaterThanOrEqualTo(10));
+          expect(
+            container.read(gameStateProvider).metodoXp,
+            greaterThanOrEqualTo(10),
+          );
           // Jump past the cooldown and keep working until proven.
           st.readyAt = DateTime.now();
           notifier.tick(0.001);
         }
       }
       expect(
-          container.read(gameStateProvider).conjectures.single.status,
-          ConjectureStatus.proven);
+        container.read(gameStateProvider).conjectures.single.status,
+        ConjectureStatus.proven,
+      );
       expect(container.read(gameStateProvider).stats.conjecturesSolved, 1);
     });
   });
 
   group('prestige conversion', () {
-    test('completed Algebraic Topology boosts the Fame-to-Legacy conversion',
-        () {
-      final s = container.read(gameStateProvider);
-      s.lifetime['fame'] = 1e6; // -> floor(sqrt(1e4)) = 100 base gain
-      s.branches['algebraic_topology'] = BranchProgress(completed: true);
-      expect(notifier.legacyGainNow, 125);
-      final bankBefore = s.prestige.legacy;
-      expect(notifier.prestige(), isTrue);
-      expect(container.read(gameStateProvider).prestige.legacy, bankBefore + 125);
-    });
+    test(
+      'completed Algebraic Topology boosts the Fame-to-Legacy conversion',
+      () {
+        final s = container.read(gameStateProvider);
+        s.lifetime['fame'] = 1e6; // -> floor(sqrt(1e4)) = 100 base gain
+        s.branches['algebraic_topology'] = BranchProgress(completed: true);
+        expect(notifier.legacyGainNow, 125);
+        final bankBefore = s.prestige.legacy;
+        expect(notifier.prestige(), isTrue);
+        expect(
+          container.read(gameStateProvider).prestige.legacy,
+          bankBefore + 125,
+        );
+      },
+    );
 
     test('without completed subjects the conversion stays at baseline', () {
       final s = container.read(gameStateProvider);

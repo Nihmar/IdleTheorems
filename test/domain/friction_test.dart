@@ -12,7 +12,10 @@ void main() {
   group('career stage rules (section 5)', () {
     test('papers earn half Fame before the thesis defense', () {
       expect(CareerSystem.paperFameFactor(CareerState()), 0.5);
-      expect(CareerSystem.paperFameFactor(CareerState(thesisDefended: true)), 1.0);
+      expect(
+        CareerSystem.paperFameFactor(CareerState(thesisDefended: true)),
+        1.0,
+      );
     });
 
     test('next stage hint tracks lifetime Fame thresholds', () {
@@ -38,7 +41,9 @@ void main() {
       final s = GameState();
       friction.maybeScheduleRetraction(s, Random(seed));
       expect(s.scheduledRetractions, hasLength(1));
-      final wait = s.scheduledRetractions.single.dueAt.difference(DateTime.now());
+      final wait = s.scheduledRetractions.single.dueAt.difference(
+        DateTime.now(),
+      );
       expect(wait.inMinutes, inInclusiveRange(9, 11));
     });
 
@@ -74,11 +79,14 @@ void main() {
     });
 
     test('burnout halves passive production rates', () {
-      final base = const ProductionSystem()
-          .compute(GameState()..producerLevels['guided_exercises'] = 2);
-      final burned = const ProductionSystem().compute(GameState()
-        ..producerLevels['guided_exercises'] = 2
-        ..burnedOutUntil = DateTime.now().add(const Duration(hours: 1)));
+      final base = const ProductionSystem().compute(
+        GameState()..producerLevels['guided_exercises'] = 2,
+      );
+      final burned = const ProductionSystem().compute(
+        GameState()
+          ..producerLevels['guided_exercises'] = 2
+          ..burnedOutUntil = DateTime.now().add(const Duration(hours: 1)),
+      );
       expect(burned.countingPerSec / base.countingPerSec, closeTo(0.5, 1e-9));
     });
 

@@ -8,18 +8,16 @@ import 'package:idle_theorems/providers/game_state_provider.dart';
 import 'package:idle_theorems/ui/overlays/main_overlay.dart';
 
 Widget wrap(ProviderContainer container) => UncontrolledProviderScope(
-      container: container,
-      child: MaterialApp(home: const MainOverlay()),
-    );
+  container: container,
+  child: MaterialApp(home: const MainOverlay()),
+);
 
 /// Opens the shop and scrolls until the Laboratory section is on screen.
 Future<void> scrollToLaboratory(WidgetTester tester) async {
   await tester.tap(find.text('Shop'));
   await tester.pumpAndSettle();
   // The laboratory sits mid-list in the lazy shop.
-  for (var i = 0;
-      i < 10 && find.text('LABORATORY').evaluate().isEmpty;
-      i++) {
+  for (var i = 0; i < 10 && find.text('LABORATORY').evaluate().isEmpty; i++) {
     await tester.dragFrom(const Offset(400, 500), const Offset(0, -400));
     await tester.pumpAndSettle();
   }
@@ -60,8 +58,10 @@ void main() {
     await tester.tap(find.textContaining('Solve exercise'));
     await tester.pump();
 
-    expect(container.read(gameStateProvider).resources.counting,
-        closeTo(1, 1e-9));
+    expect(
+      container.read(gameStateProvider).resources.counting,
+      closeTo(1, 1e-9),
+    );
     expect(container.read(gameStateProvider).stats.totalClicks, 1);
   });
 
@@ -79,16 +79,20 @@ void main() {
 
     expect(find.text('Research shop'), findsOneWidget);
     // The Legacy section pushes producers below the fold: scroll down.
-    for (var i = 0;
-        i < 10 && find.textContaining('Guided exercises').evaluate().isEmpty;
-        i++) {
+    for (
+      var i = 0;
+      i < 10 && find.textContaining('Guided exercises').evaluate().isEmpty;
+      i++
+    ) {
       await tester.dragFrom(const Offset(400, 500), const Offset(0, -400));
       await tester.pumpAndSettle();
     }
     expect(find.textContaining('Guided exercises'), findsWidgets);
   });
 
-  testWidgets('away earnings show a dismissible banner on resume', (tester) async {
+  testWidgets('away earnings show a dismissible banner on resume', (
+    tester,
+  ) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);
     final notifier = container.read(gameStateProvider.notifier);
@@ -98,8 +102,11 @@ void main() {
     await tester.pumpWidget(wrap(container));
 
     notifier.applyAwayEarnings(
-        notifier.snapshotForSave(DateTime.now().subtract(const Duration(hours: 2))),
-        DateTime.now());
+      notifier.snapshotForSave(
+        DateTime.now().subtract(const Duration(hours: 2)),
+      ),
+      DateTime.now(),
+    );
     await tester.pumpAndSettle();
 
     expect(find.textContaining('While you were away'), findsOneWidget);
@@ -108,7 +115,9 @@ void main() {
     expect(find.textContaining('While you were away'), findsNothing);
   });
 
-  testWidgets('conjectures tab lists discoveries with their gates', (tester) async {
+  testWidgets('conjectures tab lists discoveries with their gates', (
+    tester,
+  ) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);
     container
@@ -127,9 +136,7 @@ void main() {
     // A fresh student cannot formulate yet.
     expect(find.text('Unlocks at Postdoc'), findsWidgets);
     // Endgame frontiers sit below the fold of the lazy list.
-    for (var i = 0;
-        i < 10 && find.text('FRONTIERS').evaluate().isEmpty;
-        i++) {
+    for (var i = 0; i < 10 && find.text('FRONTIERS').evaluate().isEmpty; i++) {
       await tester.dragFrom(const Offset(400, 500), const Offset(0, -400));
       await tester.pumpAndSettle();
     }
@@ -142,9 +149,11 @@ void main() {
     final container = ProviderContainer();
     addTearDown(container.dispose);
     final notifier = container.read(gameStateProvider.notifier);
-    notifier.bootstrap(GameState()
-      ..playerName = 'Blaise'
-      ..stress = 0.6);
+    notifier.bootstrap(
+      GameState()
+        ..playerName = 'Blaise'
+        ..stress = 0.6,
+    );
 
     await tester.pumpWidget(wrap(container));
 
@@ -152,9 +161,11 @@ void main() {
     await tester.tap(find.text('Shop'));
     await tester.pumpAndSettle();
     // The sabbatical card sits below the fold of the lazy shop list.
-    for (var i = 0;
-        i < 15 && find.textContaining('Sabbatical').evaluate().isEmpty;
-        i++) {
+    for (
+      var i = 0;
+      i < 15 && find.textContaining('Sabbatical').evaluate().isEmpty;
+      i++
+    ) {
       await tester.dragFrom(const Offset(400, 500), const Offset(0, -400));
       await tester.pumpAndSettle();
     }
@@ -171,22 +182,23 @@ void main() {
     await tester.pumpWidget(wrap(container));
     await scrollToLaboratory(tester);
     // Scroll until the first challenge card is built.
-    for (var i = 0;
-        i < 15 &&
-            find.textContaining('Constructivist Run').evaluate().isEmpty;
-        i++) {
+    for (
+      var i = 0;
+      i < 15 && find.textContaining('Constructivist Run').evaluate().isEmpty;
+      i++
+    ) {
       await tester.dragFrom(const Offset(400, 500), const Offset(0, -400));
       await tester.pumpAndSettle();
     }
     expect(find.text('CHALLENGES'), findsOneWidget);
     expect(find.textContaining('Constructivist Run'), findsOneWidget);
     // Keep scrolling until the encrypted run's gate label is built.
-    for (var i = 0;
-        i < 15 &&
-            find.text('Unlocks after completing Cryptography')
-                .evaluate()
-                .isEmpty;
-        i++) {
+    for (
+      var i = 0;
+      i < 15 &&
+          find.text('Unlocks after completing Cryptography').evaluate().isEmpty;
+      i++
+    ) {
       await tester.dragFrom(const Offset(400, 500), const Offset(0, -400));
       await tester.pumpAndSettle();
     }
@@ -223,10 +235,13 @@ void main() {
   testWidgets('professors see their next laboratory recruit', (tester) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);
-    container.read(gameStateProvider.notifier).bootstrap(
-        GameState()
-          ..playerName = 'Blaise'
-          ..career.stage = CareerStage.professor);
+    container
+        .read(gameStateProvider.notifier)
+        .bootstrap(
+          GameState()
+            ..playerName = 'Blaise'
+            ..career.stage = CareerStage.professor,
+        );
 
     await tester.pumpWidget(wrap(container));
     await scrollToLaboratory(tester);
@@ -234,15 +249,18 @@ void main() {
     expect(find.textContaining('Recruit María'), findsOneWidget);
   });
 
-  testWidgets('prestige reboots the run through the confirmation dialog',
-      (tester) async {
+  testWidgets('prestige reboots the run through the confirmation dialog', (
+    tester,
+  ) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);
     final notifier = container.read(gameStateProvider.notifier);
-    notifier.bootstrap(GameState()
-      ..playerName = 'Blaise'
-      ..gain(0, 0, 1e4)
-      ..career.stage = CareerStage.postdoc);
+    notifier.bootstrap(
+      GameState()
+        ..playerName = 'Blaise'
+        ..gain(0, 0, 1e4)
+        ..career.stage = CareerStage.postdoc,
+    );
 
     await tester.pumpWidget(wrap(container));
 
@@ -262,20 +280,24 @@ void main() {
     expect(s.resources.fame, 0);
   });
 
-  testWidgets('active trend shows its chip and the telegraphed successor',
-      (tester) async {
+  testWidgets('active trend shows its chip and the telegraphed successor', (
+    tester,
+  ) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);
     final now = DateTime.now();
-    container.read(gameStateProvider.notifier).bootstrap(
-        GameState()
-          ..playerName = 'Blaise'
-          ..trend = TrendState(
-            activeSubject: 'analysis',
-            endsAt: now.add(const Duration(hours: 10)),
-            nextSubject: 'topology',
-            nextStartsAt: now.add(const Duration(hours: 10)),
-          ));
+    container
+        .read(gameStateProvider.notifier)
+        .bootstrap(
+          GameState()
+            ..playerName = 'Blaise'
+            ..trend = TrendState(
+              activeSubject: 'analysis',
+              endsAt: now.add(const Duration(hours: 10)),
+              nextSubject: 'topology',
+              nextStartsAt: now.add(const Duration(hours: 10)),
+            ),
+        );
 
     await tester.pumpWidget(wrap(container));
 

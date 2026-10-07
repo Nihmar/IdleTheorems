@@ -27,36 +27,52 @@ class SubjectDef {
 class SubjectEffects {
   /// x on click power.
   final double clickMultiplier;
+
   /// Flat Counting/s added to total output.
   final double countingRateAdd;
+
   /// Flat Proofing/s added to total output.
   final double proofingRateAdd;
+
   /// x on total Counting rate.
   final double countingMultiplier;
+
   /// x on total Proofing rate.
   final double proofingMultiplier;
+
   /// x on Fame granted by accepted papers.
   final double famePerPaperMult;
+
   /// Chance (0..1) that an accepted paper pays a burst instead.
   final double fameBurstChance;
+
   /// Multiplier applied during a burst.
   final double fameBurstMult;
+
   /// x on paper session cost (< 1 = discount).
   final double paperCostFactor;
+
   /// x on upgrade costs (< 1 = discount).
   final double upgradeCostFactor;
+
   /// Additive shift toward peer-review acceptance.
   final double acceptanceBonus;
+
   /// Extra concurrent paper slots.
   final int extraPapers;
+
   /// x on the offline progression cap duration.
   final double offlineCapMult;
+
   /// x on Legacy gained at prestige.
   final double legacyGainMult;
+
   /// Production compounds while playing (+0.5%/min, capped at x2).
   final bool sessionCompounding;
+
   /// x on every resource gain (rates and clicks).
   final double globalResourceMult;
+
   /// Counting multiplier grows by this much per total theorem mastered.
   final double countingPerTheorem;
 
@@ -84,11 +100,11 @@ class SubjectEffects {
 /// Theorems required to master a subject, by tree level (v0 draft):
 /// LV0 needs 4 for pacing, then 8/12/16/20 as the doc specifies.
 int masteryNeeded(int level) => switch (level) {
-      0 => 4,
-      1 => 8,
-      2 => 12,
-      _ => level == 3 ? 16 : 20,
-    };
+  0 => 4,
+  1 => 8,
+  2 => 12,
+  _ => level == 3 ? 16 : 20,
+};
 
 /// Full subject catalog — the table in plan section 3 is the source of
 /// truth. Effects that depend on systems landing later (trends, intuition
@@ -220,8 +236,7 @@ const Map<String, SubjectDef> subjectCatalog = {
     name: 'Algebraic Geometry',
     level: 3,
     prereqs: ['abstract_algebra', 'topology'],
-    effects: SubjectEffects(
-        countingMultiplier: 1.25, proofingMultiplier: 1.25),
+    effects: SubjectEffects(countingMultiplier: 1.25, proofingMultiplier: 1.25),
     effectText: 'Rare double effect: +25% Counting AND Proofing',
   ),
   'algebraic_topology': SubjectDef(

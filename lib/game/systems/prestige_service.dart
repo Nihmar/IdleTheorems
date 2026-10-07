@@ -75,7 +75,8 @@ class PrestigeService {
   const PrestigeService();
 
   static const double legacyPointMult = 0.02; // +2% per lifetime point
-  static const int minLegacyForPrestige = 10; // first prestige milestone (§13.11)
+  static const int minLegacyForPrestige =
+      10; // first prestige milestone (§13.11)
 
   /// Legacy earned by prestigising right now. Lifetime Fame resets with
   /// the run, so the formula reads directly off the current total.

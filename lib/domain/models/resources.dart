@@ -15,7 +15,11 @@ class Resources {
 
   double get total => counting + proofing + fame;
 
-  void gain(double countingGain, [double proofingGain = 0, double fameGain = 0]) {
+  void gain(
+    double countingGain, [
+    double proofingGain = 0,
+    double fameGain = 0,
+  ]) {
     counting += countingGain;
     proofing += proofingGain;
     fame += fameGain;
@@ -26,9 +30,7 @@ class Resources {
     double proofingCost = 0,
     double fameCost = 0,
   ]) =>
-      counting >= countingCost &&
-      proofing >= proofingCost &&
-      fame >= fameCost;
+      counting >= countingCost && proofing >= proofingCost && fame >= fameCost;
 
   /// Deducts the given amounts. Returns false without spending if unaffordable.
   bool spend(
@@ -43,7 +45,8 @@ class Resources {
     return true;
   }
 
-  Resources copy() => Resources(counting: counting, proofing: proofing, fame: fame);
+  Resources copy() =>
+      Resources(counting: counting, proofing: proofing, fame: fame);
 
   @override
   String toString() => 'C:$counting P:$proofing F:$fame';
@@ -52,8 +55,8 @@ class Resources {
 /// Affordability check for a single-amount cost denominated in [kind].
 extension ResourcesAffordOfKind on Resources {
   bool canAffordOf(ResourceKind kind, double amount) => switch (kind) {
-        ResourceKind.counting => canAfford(amount),
-        ResourceKind.proofing => canAfford(0, amount),
-        ResourceKind.fame => canAfford(0, 0, amount),
-      };
+    ResourceKind.counting => canAfford(amount),
+    ResourceKind.proofing => canAfford(0, amount),
+    ResourceKind.fame => canAfford(0, 0, amount),
+  };
 }

@@ -10,48 +10,48 @@ class BranchProgress {
   BranchProgress({this.theoremsMastered = 0, this.completed = false});
 
   factory BranchProgress.fromJson(Map<String, dynamic> json) => BranchProgress(
-        theoremsMastered: json['theorems_mastered'] as int,
-        completed: json['completed'] as bool,
-      );
+    theoremsMastered: json['theorems_mastered'] as int,
+    completed: json['completed'] as bool,
+  );
 
   Map<String, dynamic> toJson() => {
-        'theorems_mastered': theoremsMastered,
-        'completed': completed,
-      };
+    'theorems_mastered': theoremsMastered,
+    'completed': completed,
+  };
 }
 
 class PrestigeState {
   int legacy = 0;
+
   /// Lifetime total earned: drives the permanent +2%/point bonus even
   /// after points are spent on mathematicians.
   int legacyAllTime = 0;
   int prestigesCount = 0;
   List<String> mathematicians = [];
 
-  PrestigeState(
-      {this.legacy = 0,
-      this.legacyAllTime = 0,
-      this.prestigesCount = 0,
-      List<String>? mathematicians})
-      : mathematicians = mathematicians ?? [];
+  PrestigeState({
+    this.legacy = 0,
+    this.legacyAllTime = 0,
+    this.prestigesCount = 0,
+    List<String>? mathematicians,
+  }) : mathematicians = mathematicians ?? [];
 
   factory PrestigeState.fromJson(Map<String, dynamic> json) => PrestigeState(
-        legacy: json['legacy'] as int,
-        // Old saves predate the split: treat the bank as the all-time total.
-        legacyAllTime:
-            (json['legacy_all_time'] as int?) ?? (json['legacy'] as int),
-        prestigesCount: json['prestiges_count'] as int,
-        mathematicians: (json['mathematicians'] as List<dynamic>)
-            .map((e) => e as String)
-            .toList(),
-      );
+    legacy: json['legacy'] as int,
+    // Old saves predate the split: treat the bank as the all-time total.
+    legacyAllTime: (json['legacy_all_time'] as int?) ?? (json['legacy'] as int),
+    prestigesCount: json['prestiges_count'] as int,
+    mathematicians: (json['mathematicians'] as List<dynamic>)
+        .map((e) => e as String)
+        .toList(),
+  );
 
   Map<String, dynamic> toJson() => {
-        'legacy': legacy,
-        'legacy_all_time': legacyAllTime,
-        'prestiges_count': prestigesCount,
-        'mathematicians': mathematicians,
-      };
+    'legacy': legacy,
+    'legacy_all_time': legacyAllTime,
+    'prestiges_count': prestigesCount,
+    'mathematicians': mathematicians,
+  };
 }
 
 class TrendState {
@@ -61,25 +61,30 @@ class TrendState {
   String nextSubject;
   DateTime? nextStartsAt;
 
-  TrendState({this.activeSubject = '', this.endsAt, this.nextSubject = '', this.nextStartsAt});
+  TrendState({
+    this.activeSubject = '',
+    this.endsAt,
+    this.nextSubject = '',
+    this.nextStartsAt,
+  });
 
   factory TrendState.fromJson(Map<String, dynamic> json) => TrendState(
-        activeSubject: json['active_subject'] as String? ?? '',
-        endsAt: json['ends_at_ms'] == null
-            ? null
-            : DateTime.fromMillisecondsSinceEpoch(json['ends_at_ms'] as int),
-        nextSubject: json['next_subject'] as String? ?? '',
-        nextStartsAt: json['next_starts_at_ms'] == null
-            ? null
-            : DateTime.fromMillisecondsSinceEpoch(json['next_starts_at_ms'] as int),
-      );
+    activeSubject: json['active_subject'] as String? ?? '',
+    endsAt: json['ends_at_ms'] == null
+        ? null
+        : DateTime.fromMillisecondsSinceEpoch(json['ends_at_ms'] as int),
+    nextSubject: json['next_subject'] as String? ?? '',
+    nextStartsAt: json['next_starts_at_ms'] == null
+        ? null
+        : DateTime.fromMillisecondsSinceEpoch(json['next_starts_at_ms'] as int),
+  );
 
   Map<String, dynamic> toJson() => {
-        'active_subject': activeSubject,
-        'ends_at_ms': endsAt?.millisecondsSinceEpoch,
-        'next_subject': nextSubject,
-        'next_starts_at_ms': nextStartsAt?.millisecondsSinceEpoch,
-      };
+    'active_subject': activeSubject,
+    'ends_at_ms': endsAt?.millisecondsSinceEpoch,
+    'next_subject': nextSubject,
+    'next_starts_at_ms': nextStartsAt?.millisecondsSinceEpoch,
+  };
 }
 
 /// A future retraction waiting to hit an accepted paper (section 2).
@@ -91,7 +96,9 @@ class ScheduledRetraction {
   Map<String, dynamic> toJson() => {'due_at_ms': dueAt.millisecondsSinceEpoch};
 
   factory ScheduledRetraction.fromJson(Map<String, dynamic> json) =>
-      ScheduledRetraction(DateTime.fromMillisecondsSinceEpoch(json['due_at_ms'] as int));
+      ScheduledRetraction(
+        DateTime.fromMillisecondsSinceEpoch(json['due_at_ms'] as int),
+      );
 }
 
 class Settings {
@@ -100,19 +107,23 @@ class Settings {
   bool sound;
   bool reducedMotion;
 
-  Settings({this.theme = 'chalkboard', this.sound = true, this.reducedMotion = false});
+  Settings({
+    this.theme = 'chalkboard',
+    this.sound = true,
+    this.reducedMotion = false,
+  });
 
   factory Settings.fromJson(Map<String, dynamic> json) => Settings(
-        theme: json['theme'] as String? ?? 'chalkboard',
-        sound: json['sound'] as bool? ?? true,
-        reducedMotion: json['reduced_motion'] as bool? ?? false,
-      );
+    theme: json['theme'] as String? ?? 'chalkboard',
+    sound: json['sound'] as bool? ?? true,
+    reducedMotion: json['reduced_motion'] as bool? ?? false,
+  );
 
   Map<String, dynamic> toJson() => {
-        'theme': theme,
-        'sound': sound,
-        'reduced_motion': reducedMotion,
-      };
+    'theme': theme,
+    'sound': sound,
+    'reduced_motion': reducedMotion,
+  };
 }
 
 /// Flavor/export only — never read by game logic (plan section 14.2).
@@ -134,22 +145,22 @@ class Stats {
   });
 
   factory Stats.fromJson(Map<String, dynamic> json) => Stats(
-        totalClicks: json['total_clicks'] as int? ?? 0,
-        papersPublished: json['papers_published'] as int? ?? 0,
-        papersRejected: json['papers_rejected'] as int? ?? 0,
-        retractions: json['retractions'] as int? ?? 0,
-        conjecturesSolved: json['conjectures_solved'] as int? ?? 0,
-        playtimeMs: json['playtime_ms'] as int? ?? 0,
-      );
+    totalClicks: json['total_clicks'] as int? ?? 0,
+    papersPublished: json['papers_published'] as int? ?? 0,
+    papersRejected: json['papers_rejected'] as int? ?? 0,
+    retractions: json['retractions'] as int? ?? 0,
+    conjecturesSolved: json['conjectures_solved'] as int? ?? 0,
+    playtimeMs: json['playtime_ms'] as int? ?? 0,
+  );
 
   Map<String, dynamic> toJson() => {
-        'total_clicks': totalClicks,
-        'papers_published': papersPublished,
-        'papers_rejected': papersRejected,
-        'retractions': retractions,
-        'conjectures_solved': conjecturesSolved,
-        'playtime_ms': playtimeMs,
-      };
+    'total_clicks': totalClicks,
+    'papers_published': papersPublished,
+    'papers_rejected': papersRejected,
+    'retractions': retractions,
+    'conjectures_solved': conjecturesSolved,
+    'playtime_ms': playtimeMs,
+  };
 }
 
 /// Full save schema (plan section 14.2), hand-rolled JSON so it stays
@@ -161,6 +172,7 @@ class SaveData {
   static const int currentVersion = 3;
 
   int version;
+
   /// Player-chosen mathematician name; empty until chosen (additive field).
   String playerName;
   DateTime savedAt;
@@ -169,37 +181,48 @@ class SaveData {
   Map<String, double> lifetime;
   CareerState career;
   Map<String, BranchProgress> branches;
+
   /// Focused research target id ('' = none); additive field.
   String activeSubjectId;
   Map<String, int> producerLevels;
   Map<String, int> upgradeLevels;
+
   /// Owned technique ids (addition vs doc draft).
   List<String> techniques;
   List<ConjectureState> conjectures;
+
   /// Persistent production multipliers from proven conjectures (§4).
   /// Additive fields, default 1.
   double conjCountMult;
   double conjProofMult;
   double conjGlobalMult;
+
   /// Burnout stress 0..1 and current burnout end (additive fields, §13.10).
   double stress;
   DateTime? burnedOutUntil;
+
   /// Accepted papers whose error may surface later (additive field, §2).
   List<ScheduledRetraction> scheduledRetractions;
   PrestigeState prestige;
   TrendState trend;
   int metodoLevel;
+
   /// XP towards the next Metodo level (addition vs doc draft).
   int metodoXp;
+
   /// Papers started this run: drives paper cost scaling and citations.
   int papersInRun;
+
   /// Cosmetic titles earned by proving open problems (§3 endgame);
   /// persists across prestiges.
   List<String> titles;
+
   /// Active optional challenge id ('' = none); additive field (§7).
   String activeChallenge;
+
   /// Challenges already completed this account; additive field.
   List<String> completedChallenges;
+
   /// Permanent production boost from completed challenges; additive.
   double challengeGlobalMult;
   Settings settings;
@@ -263,46 +286,47 @@ class SaveData {
   }
 
   Map<String, dynamic> toJson() => {
-        'version': version,
-        'player_name': playerName,
-        'saved_at_ms': savedAt.millisecondsSinceEpoch,
-        'last_loaded_at_ms': lastLoadedAt.millisecondsSinceEpoch,
-        'resources': {
-          'counting': resources.counting,
-          'proofing': resources.proofing,
-          'fame': resources.fame,
-        },
-        'lifetime': lifetime,
-        'career': {
-          'stage': career.stage.name,
-          'thesis_defended': career.thesisDefended,
-          'apprentices': career.apprentices,
-        },
-        'branches': branches.map((k, v) => MapEntry(k, v.toJson())),
-        'active_subject_id': activeSubjectId,
-        'producer_levels': producerLevels,
-        'upgrade_levels': upgradeLevels,
-        'techniques': techniques,
-        'conjectures': conjectures.map((c) => c.toJson()).toList(),
-        'conj_count_mult': conjCountMult,
-        'conj_proof_mult': conjProofMult,
-        'conj_global_mult': conjGlobalMult,
-        'stress': stress,
-        'burned_out_until_ms': burnedOutUntil?.millisecondsSinceEpoch,
-        'scheduled_retractions':
-            scheduledRetractions.map((r) => r.toJson()).toList(),
-        'prestige': prestige.toJson(),
-        'trend': trend.toJson(),
-        'metodo_level': metodoLevel,
-        'metodo_xp': metodoXp,
-        'papers_in_run': papersInRun,
-        'titles': titles,
-        'active_challenge': activeChallenge,
-        'completed_challenges': completedChallenges,
-        'challenge_global_mult': challengeGlobalMult,
-        'settings': settings.toJson(),
-        'stats': stats.toJson(),
-      };
+    'version': version,
+    'player_name': playerName,
+    'saved_at_ms': savedAt.millisecondsSinceEpoch,
+    'last_loaded_at_ms': lastLoadedAt.millisecondsSinceEpoch,
+    'resources': {
+      'counting': resources.counting,
+      'proofing': resources.proofing,
+      'fame': resources.fame,
+    },
+    'lifetime': lifetime,
+    'career': {
+      'stage': career.stage.name,
+      'thesis_defended': career.thesisDefended,
+      'apprentices': career.apprentices,
+    },
+    'branches': branches.map((k, v) => MapEntry(k, v.toJson())),
+    'active_subject_id': activeSubjectId,
+    'producer_levels': producerLevels,
+    'upgrade_levels': upgradeLevels,
+    'techniques': techniques,
+    'conjectures': conjectures.map((c) => c.toJson()).toList(),
+    'conj_count_mult': conjCountMult,
+    'conj_proof_mult': conjProofMult,
+    'conj_global_mult': conjGlobalMult,
+    'stress': stress,
+    'burned_out_until_ms': burnedOutUntil?.millisecondsSinceEpoch,
+    'scheduled_retractions': scheduledRetractions
+        .map((r) => r.toJson())
+        .toList(),
+    'prestige': prestige.toJson(),
+    'trend': trend.toJson(),
+    'metodo_level': metodoLevel,
+    'metodo_xp': metodoXp,
+    'papers_in_run': papersInRun,
+    'titles': titles,
+    'active_challenge': activeChallenge,
+    'completed_challenges': completedChallenges,
+    'challenge_global_mult': challengeGlobalMult,
+    'settings': settings.toJson(),
+    'stats': stats.toJson(),
+  };
 
   factory SaveData.fromJson(Map<String, dynamic> json) {
     final raw = migrate(json);
@@ -310,27 +334,35 @@ class SaveData {
       version: raw['version'] as int,
       playerName: raw['player_name'] as String? ?? '',
       savedAt: DateTime.fromMillisecondsSinceEpoch(raw['saved_at_ms'] as int),
-      lastLoadedAt: DateTime.fromMillisecondsSinceEpoch(raw['last_loaded_at_ms'] as int),
+      lastLoadedAt: DateTime.fromMillisecondsSinceEpoch(
+        raw['last_loaded_at_ms'] as int,
+      ),
       resources: Resources(
         counting: (raw['resources']['counting'] as num).toDouble(),
         proofing: (raw['resources']['proofing'] as num).toDouble(),
         fame: (raw['resources']['fame'] as num).toDouble(),
       ),
-      lifetime: (raw['lifetime'] as Map<String, dynamic>)
-          .map((k, v) => MapEntry(k, (v as num).toDouble())),
+      lifetime: (raw['lifetime'] as Map<String, dynamic>).map(
+        (k, v) => MapEntry(k, (v as num).toDouble()),
+      ),
       career: CareerState(
         stage: CareerStage.values.byName(raw['career']['stage'] as String),
         thesisDefended: raw['career']['thesis_defended'] as bool,
         apprentices: raw['career']['apprentices'] as int,
       ),
-      branches: (raw['branches'] as Map<String, dynamic>? ?? {})
-          .map((k, v) => MapEntry(k, BranchProgress.fromJson(v as Map<String, dynamic>))),
+      branches: (raw['branches'] as Map<String, dynamic>? ?? {}).map(
+        (k, v) =>
+            MapEntry(k, BranchProgress.fromJson(v as Map<String, dynamic>)),
+      ),
       activeSubjectId: raw['active_subject_id'] as String? ?? '',
       producerLevels: (raw['producer_levels'] as Map<String, dynamic>? ?? {})
           .map((k, v) => MapEntry(k, v as int)),
-      upgradeLevels: (raw['upgrade_levels'] as Map<String, dynamic>? ?? {})
-          .map((k, v) => MapEntry(k, v as int)),
-      techniques: (raw['techniques'] as List<dynamic>? ?? []).map((e) => e as String).toList(),
+      upgradeLevels: (raw['upgrade_levels'] as Map<String, dynamic>? ?? {}).map(
+        (k, v) => MapEntry(k, v as int),
+      ),
+      techniques: (raw['techniques'] as List<dynamic>? ?? [])
+          .map((e) => e as String)
+          .toList(),
       conjectures: (raw['conjectures'] as List<dynamic>? ?? [])
           .map((e) => ConjectureState.fromJson(e as Map<String, dynamic>))
           .toList(),
@@ -340,10 +372,15 @@ class SaveData {
       stress: (raw['stress'] as num?)?.toDouble() ?? 0,
       burnedOutUntil: raw['burned_out_until_ms'] == null
           ? null
-          : DateTime.fromMillisecondsSinceEpoch(raw['burned_out_until_ms'] as int),
-      scheduledRetractions: (raw['scheduled_retractions'] as List<dynamic>? ?? [])
-          .map((e) => ScheduledRetraction.fromJson(e as Map<String, dynamic>))
-          .toList(),
+          : DateTime.fromMillisecondsSinceEpoch(
+              raw['burned_out_until_ms'] as int,
+            ),
+      scheduledRetractions:
+          (raw['scheduled_retractions'] as List<dynamic>? ?? [])
+              .map(
+                (e) => ScheduledRetraction.fromJson(e as Map<String, dynamic>),
+              )
+              .toList(),
       prestige: PrestigeState.fromJson(raw['prestige'] as Map<String, dynamic>),
       trend: TrendState.fromJson(raw['trend'] as Map<String, dynamic>),
       metodoLevel: raw['metodo_level'] as int? ?? 1,
@@ -357,7 +394,8 @@ class SaveData {
           (raw['completed_challenges'] as List<dynamic>? ?? const [])
               .map((e) => e.toString())
               .toList(),
-      challengeGlobalMult: (raw['challenge_global_mult'] as num?)?.toDouble() ?? 1,
+      challengeGlobalMult:
+          (raw['challenge_global_mult'] as num?)?.toDouble() ?? 1,
       settings: Settings.fromJson(raw['settings'] as Map<String, dynamic>),
       stats: Stats.fromJson(raw['stats'] as Map<String, dynamic>),
     );

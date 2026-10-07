@@ -9,8 +9,7 @@ void main() {
   const trend = TrendService();
 
   group('schedule management', () {
-    test('a fresh calendar gets a current slot and a telegraphed next one',
-        () {
+    test('a fresh calendar gets a current slot and a telegraphed next one', () {
       final s = GameState();
       trend.update(s);
       expect(trend.isActive(s), isTrue);
@@ -18,8 +17,10 @@ void main() {
       expect(s.trend.nextSubject, isNotEmpty);
       expect(s.trend.endsAt!.isAfter(DateTime.now()), isTrue);
       // The next slot starts exactly when the active one ends.
-      expect(s.trend.nextStartsAt!.difference(s.trend.endsAt!),
-          const Duration());
+      expect(
+        s.trend.nextStartsAt!.difference(s.trend.endsAt!),
+        const Duration(),
+      );
     });
 
     test('expired slots roll forward to the telegraphed subject', () {
@@ -32,7 +33,10 @@ void main() {
       expect(s.trend.activeSubject, announced);
       expect(s.trend.endsAt!.isAfter(DateTime.now()), isTrue);
       expect(s.trend.nextSubject, isNotEmpty);
-      expect(s.trend.nextStartsAt!.difference(s.trend.endsAt!), const Duration());
+      expect(
+        s.trend.nextStartsAt!.difference(s.trend.endsAt!),
+        const Duration(),
+      );
     });
 
     test('long absences resync instead of replaying missed slots', () {
@@ -47,8 +51,10 @@ void main() {
       expect(trend.isActive(s), isTrue);
       expect(s.trend.endsAt!.isAfter(DateTime.now()), isTrue);
       // The resynced window must not exceed one full rotation.
-      expect(s.trend.endsAt!.difference(DateTime.now()).inHours,
-          lessThanOrEqualTo(TrendService.rotation.inHours + 1));
+      expect(
+        s.trend.endsAt!.difference(DateTime.now()).inHours,
+        lessThanOrEqualTo(TrendService.rotation.inHours + 1),
+      );
     });
 
     test('a single missed window honours its scheduled boundary', () {
@@ -85,9 +91,10 @@ void main() {
       s.trend.activeSubject = 'discrete_algebra';
       s.trend.endsAt = DateTime.now().add(const Duration(hours: 24));
       final outcome = svc.workSession(
-          s,
-          'double_counting_lemmas',
-          trendBonus: TrendService.conjectureProgressBonus);
+        s,
+        'double_counting_lemmas',
+        trendBonus: TrendService.conjectureProgressBonus,
+      );
       expect(outcome, isNull);
       expect(s.conjectures.single.progress, closeTo(12.5 * 1.25, 1e-9));
     });

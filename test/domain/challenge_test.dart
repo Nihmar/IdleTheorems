@@ -17,9 +17,12 @@ void main() {
     test('the encrypted run stays sealed until cryptography is done', () {
       expect(svc.unlocked(_state(), ChallengeService.encryptedRun), isFalse);
       expect(
-          svc.unlocked(_state(completed: 'cryptography'),
-              ChallengeService.encryptedRun),
-          isTrue);
+        svc.unlocked(
+          _state(completed: 'cryptography'),
+          ChallengeService.encryptedRun,
+        ),
+        isTrue,
+      );
       expect(svc.enter(_state(), ChallengeService.encryptedRun), isFalse);
     });
 
@@ -69,15 +72,21 @@ void main() {
   group('rule modifiers', () {
     test('constructivist halves passive output and doubles paper Fame', () {
       final prod = const ProductionSystem();
-      final plain = prod.compute(_state()..producerLevels['guided_exercises'] = 3);
-      final lean = prod.compute(_state()
-        ..activeChallenge = ChallengeService.constructivistRun
-        ..producerLevels['guided_exercises'] = 3);
+      final plain = prod.compute(
+        _state()..producerLevels['guided_exercises'] = 3,
+      );
+      final lean = prod.compute(
+        _state()
+          ..activeChallenge = ChallengeService.constructivistRun
+          ..producerLevels['guided_exercises'] = 3,
+      );
       expect(lean.countingPerSec / plain.countingPerSec, closeTo(0.5, 1e-9));
       expect(
-          svc.paperFameFactor(_state()
-            ..activeChallenge = ChallengeService.constructivistRun),
-          closeTo(2, 1e-9));
+        svc.paperFameFactor(
+          _state()..activeChallenge = ChallengeService.constructivistRun,
+        ),
+        closeTo(2, 1e-9),
+      );
     });
 
     test('no-paper run closes the desk and pays click Fame', () {
@@ -111,9 +120,11 @@ void main() {
     test('completed-challenge boost feeds every production channel', () {
       final prod = const ProductionSystem();
       final base = prod.compute(_state()..papersInRun = 10);
-      final boosted = prod.compute(_state()
-        ..papersInRun = 10
-        ..challengeGlobalMult = 1.05);
+      final boosted = prod.compute(
+        _state()
+          ..papersInRun = 10
+          ..challengeGlobalMult = 1.05,
+      );
       expect(boosted.famePerSec / base.famePerSec, closeTo(1.05, 1e-9));
     });
   });

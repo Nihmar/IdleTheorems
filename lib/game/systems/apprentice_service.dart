@@ -12,6 +12,7 @@ class ApprenticeDef {
   final double costCounting;
   final double costProofing;
   final double costFame;
+
   /// Flat Counting per second contributed while employed.
   final double countingPerSec;
 
@@ -81,13 +82,11 @@ class ApprenticeService {
   ];
 
   /// The next apprentice to hire, or null when the lab is full.
-  ApprenticeDef? nextHire(int owned) =>
-      owned < max ? catalog[owned] : null;
+  ApprenticeDef? nextHire(int owned) => owned < max ? catalog[owned] : null;
 
   /// Only professors may run a laboratory (sections 5, 13.8).
   bool canHire(GameState s) =>
-      s.career.stage == CareerStage.professor &&
-      s.career.apprentices < max;
+      s.career.stage == CareerStage.professor && s.career.apprentices < max;
 
   /// Total flat Counting per second from the current headcount.
   double outputOf(int owned) {

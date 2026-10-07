@@ -8,8 +8,28 @@ import 'dart:math';
 /// compact suffixes up to decillion, then scientific notation.
 
 const List<String> _suffixes = [
-  '', 'K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oc', 'No', 'Dc',
-  'UDc', 'DDc', 'TDc', 'QaDc', 'QiDc', 'SxDc', 'SpDc', 'OcDc', 'NoDc', 'VDc',
+  '',
+  'K',
+  'M',
+  'B',
+  'T',
+  'Qa',
+  'Qi',
+  'Sx',
+  'Sp',
+  'Oc',
+  'No',
+  'Dc',
+  'UDc',
+  'DDc',
+  'TDc',
+  'QaDc',
+  'QiDc',
+  'SxDc',
+  'SpDc',
+  'OcDc',
+  'NoDc',
+  'VDc',
 ];
 
 /// Formats [value] compactly: `1234` -> `1.23K`, `5.6e21` -> `5.60Yd`-style

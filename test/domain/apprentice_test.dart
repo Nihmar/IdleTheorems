@@ -66,8 +66,10 @@ void main() {
       final base = prod.compute(_professor());
       final withLab = prod.compute(_professor()..career.apprentices = 2);
       final expected = svc.outputOf(2);
-      expect(withLab.countingPerSec - base.countingPerSec,
-          closeTo(expected, 1e-9));
+      expect(
+        withLab.countingPerSec - base.countingPerSec,
+        closeTo(expected, 1e-9),
+      );
     });
 
     test('apprentice output scales with conjecture multipliers', () {

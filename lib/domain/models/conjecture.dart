@@ -12,19 +12,23 @@ enum RewardType { productionMultiplier, fameBurst, legacyBonus, cosmeticTitle }
 
 class ConjectureReward {
   final RewardType type;
+
   /// Multiplier delta (0.25 = +25%) for production rewards; flat Fame for
   /// bursts; flat Legacy points for legacy bonuses.
   final double value;
+
   /// 'counting' | 'proofing' | 'all' — only meaningful for multipliers.
   final String target;
+
   /// Title name — only meaningful for [RewardType.cosmeticTitle].
   final String title;
 
-  const ConjectureReward(
-      {required this.type,
-      required this.value,
-      this.target = '',
-      this.title = ''});
+  const ConjectureReward({
+    required this.type,
+    required this.value,
+    this.target = '',
+    this.title = '',
+  });
 }
 
 class ConjectureState {
@@ -34,6 +38,7 @@ class ConjectureState {
   DateTime lastWorkAt;
   int attempts;
   DateTime? resolvedAt;
+
   /// When a refuted conjecture may be worked again after its cooldown.
   DateTime? readyAt;
 
@@ -47,29 +52,34 @@ class ConjectureState {
     this.readyAt,
   }) : lastWorkAt = lastWorkAt ?? DateTime.now();
 
-  factory ConjectureState.fromJson(Map<String, dynamic> json) => ConjectureState(
+  factory ConjectureState.fromJson(Map<String, dynamic> json) =>
+      ConjectureState(
         defId: json['def_id'] as String,
         status: ConjectureStatus.values.byName(json['status'] as String),
         progress: (json['progress'] as num).toDouble(),
-        lastWorkAt: DateTime.fromMillisecondsSinceEpoch(json['last_work_at_ms'] as int),
+        lastWorkAt: DateTime.fromMillisecondsSinceEpoch(
+          json['last_work_at_ms'] as int,
+        ),
         attempts: json['attempts'] as int,
         resolvedAt: json['resolved_at_ms'] == null
             ? null
-            : DateTime.fromMillisecondsSinceEpoch(json['resolved_at_ms'] as int),
+            : DateTime.fromMillisecondsSinceEpoch(
+                json['resolved_at_ms'] as int,
+              ),
         readyAt: json['ready_at_ms'] == null
             ? null
             : DateTime.fromMillisecondsSinceEpoch(json['ready_at_ms'] as int),
       );
 
   Map<String, dynamic> toJson() => {
-        'def_id': defId,
-        'status': status.key,
-        'progress': progress,
-        'last_work_at_ms': lastWorkAt.millisecondsSinceEpoch,
-        'attempts': attempts,
-        'resolved_at_ms': resolvedAt?.millisecondsSinceEpoch,
-        'ready_at_ms': readyAt?.millisecondsSinceEpoch,
-      };
+    'def_id': defId,
+    'status': status.key,
+    'progress': progress,
+    'last_work_at_ms': lastWorkAt.millisecondsSinceEpoch,
+    'attempts': attempts,
+    'resolved_at_ms': resolvedAt?.millisecondsSinceEpoch,
+    'ready_at_ms': readyAt?.millisecondsSinceEpoch,
+  };
 }
 
 /// One-time cost to formulate (pay once, then work sessions drive it).
@@ -86,11 +96,13 @@ class ConjectureCosts {
 class ConjectureDef {
   final String id;
   final String name;
+
   /// Branches that must be COMPLETED before formulation.
   final List<String> subjects;
   final int tier; // 1..5
   final ConjectureCosts formulation;
   final ConjectureCosts workPerSession;
+
   /// Base progress gained per session, in percent.
   final double progressPerWork;
   final List<ConjectureReward> successRewards;
@@ -115,19 +127,21 @@ class ConjectureDef {
 
   /// Player-facing one-line summary of the success reward(s).
   String get rewardSummary {
-    return successRewards.map((r) {
-      switch (r.type) {
-        case RewardType.productionMultiplier:
-          final what = r.target == 'all' ? 'all resources' : r.target;
-          return '+${(r.value * 100).round()}% $what';
-        case RewardType.fameBurst:
-          return '+${r.value.round()} Fame burst';
-        case RewardType.legacyBonus:
-          return '+${r.value.round()} Legacy';
-        case RewardType.cosmeticTitle:
-          return '"${r.title}" title';
-      }
-    }).join(', ');
+    return successRewards
+        .map((r) {
+          switch (r.type) {
+            case RewardType.productionMultiplier:
+              final what = r.target == 'all' ? 'all resources' : r.target;
+              return '+${(r.value * 100).round()}% $what';
+            case RewardType.fameBurst:
+              return '+${r.value.round()} Fame burst';
+            case RewardType.legacyBonus:
+              return '+${r.value.round()} Legacy';
+            case RewardType.cosmeticTitle:
+              return '"${r.title}" title';
+          }
+        })
+        .join(', ');
   }
 }
 
@@ -144,7 +158,13 @@ const Map<String, ConjectureDef> conjectureCatalog = {
     formulation: ConjectureCosts(0, 500, 0),
     workPerSession: ConjectureCosts(200, 100, 0),
     progressPerWork: 12.5,
-    successRewards: [ConjectureReward(type: RewardType.productionMultiplier, value: 0.25, target: 'counting')],
+    successRewards: [
+      ConjectureReward(
+        type: RewardType.productionMultiplier,
+        value: 0.25,
+        target: 'counting',
+      ),
+    ],
     retryCooldown: Duration(minutes: 30),
   ),
   'integral_test_bounds': ConjectureDef(
@@ -155,7 +175,13 @@ const Map<String, ConjectureDef> conjectureCatalog = {
     formulation: ConjectureCosts(0, 500, 0),
     workPerSession: ConjectureCosts(200, 100, 0),
     progressPerWork: 12.5,
-    successRewards: [ConjectureReward(type: RewardType.productionMultiplier, value: 0.25, target: 'proofing')],
+    successRewards: [
+      ConjectureReward(
+        type: RewardType.productionMultiplier,
+        value: 0.25,
+        target: 'proofing',
+      ),
+    ],
     retryCooldown: Duration(minutes: 30),
   ),
   'euclid_numbers': ConjectureDef(
@@ -166,7 +192,13 @@ const Map<String, ConjectureDef> conjectureCatalog = {
     formulation: ConjectureCosts(0, 5000, 0),
     workPerSession: ConjectureCosts(0, 800, 0),
     progressPerWork: 10,
-    successRewards: [ConjectureReward(type: RewardType.productionMultiplier, value: 0.5, target: 'counting')],
+    successRewards: [
+      ConjectureReward(
+        type: RewardType.productionMultiplier,
+        value: 0.5,
+        target: 'counting',
+      ),
+    ],
     retryCooldown: Duration(hours: 2),
   ),
   'compactness_sequences': ConjectureDef(
@@ -177,7 +209,13 @@ const Map<String, ConjectureDef> conjectureCatalog = {
     formulation: ConjectureCosts(0, 5000, 0),
     workPerSession: ConjectureCosts(0, 800, 0),
     progressPerWork: 10,
-    successRewards: [ConjectureReward(type: RewardType.productionMultiplier, value: 0.5, target: 'proofing')],
+    successRewards: [
+      ConjectureReward(
+        type: RewardType.productionMultiplier,
+        value: 0.5,
+        target: 'proofing',
+      ),
+    ],
     retryCooldown: Duration(hours: 2),
   ),
   'concentration_inequalities': ConjectureDef(
@@ -200,7 +238,13 @@ const Map<String, ConjectureDef> conjectureCatalog = {
     formulation: ConjectureCosts(0, 50000, 0),
     workPerSession: ConjectureCosts(500, 6000, 0),
     progressPerWork: 8.3,
-    successRewards: [ConjectureReward(type: RewardType.productionMultiplier, value: 1.0, target: 'proofing')],
+    successRewards: [
+      ConjectureReward(
+        type: RewardType.productionMultiplier,
+        value: 1.0,
+        target: 'proofing',
+      ),
+    ],
     retryCooldown: Duration(hours: 12),
   ),
   'elliptic_curve_heights': ConjectureDef(
@@ -211,7 +255,9 @@ const Map<String, ConjectureDef> conjectureCatalog = {
     formulation: ConjectureCosts(0, 50000, 0),
     workPerSession: ConjectureCosts(500, 6000, 0),
     progressPerWork: 8.3,
-    successRewards: [ConjectureReward(type: RewardType.fameBurst, value: 10000)],
+    successRewards: [
+      ConjectureReward(type: RewardType.fameBurst, value: 10000),
+    ],
     retryCooldown: Duration(hours: 12),
   ),
   // -------------------------------------------------------- tier 4
@@ -223,7 +269,13 @@ const Map<String, ConjectureDef> conjectureCatalog = {
     formulation: ConjectureCosts(0, 500000, 0),
     workPerSession: ConjectureCosts(0, 50000, 1000),
     progressPerWork: 6.25,
-    successRewards: [ConjectureReward(type: RewardType.productionMultiplier, value: 2.0, target: 'counting')],
+    successRewards: [
+      ConjectureReward(
+        type: RewardType.productionMultiplier,
+        value: 2.0,
+        target: 'counting',
+      ),
+    ],
     retryCooldown: Duration(hours: 48),
   ),
   'modular_symmetries': ConjectureDef(
@@ -234,7 +286,13 @@ const Map<String, ConjectureDef> conjectureCatalog = {
     formulation: ConjectureCosts(0, 500000, 0),
     workPerSession: ConjectureCosts(0, 50000, 1000),
     progressPerWork: 6.25,
-    successRewards: [ConjectureReward(type: RewardType.productionMultiplier, value: 2.0, target: 'proofing')],
+    successRewards: [
+      ConjectureReward(
+        type: RewardType.productionMultiplier,
+        value: 2.0,
+        target: 'proofing',
+      ),
+    ],
     retryCooldown: Duration(hours: 48),
   ),
   'collatz': ConjectureDef(
@@ -248,7 +306,11 @@ const Map<String, ConjectureDef> conjectureCatalog = {
     successRewards: [
       ConjectureReward(type: RewardType.fameBurst, value: 10000),
       ConjectureReward(type: RewardType.legacyBonus, value: 100),
-      ConjectureReward(type: RewardType.cosmeticTitle, value: 0, title: 'Taming 3n+1'),
+      ConjectureReward(
+        type: RewardType.cosmeticTitle,
+        value: 0,
+        title: 'Taming 3n+1',
+      ),
     ],
     retryCooldown: Duration(hours: 48),
   ),
@@ -263,8 +325,16 @@ const Map<String, ConjectureDef> conjectureCatalog = {
     progressPerWork: 2,
     successRewards: [
       ConjectureReward(type: RewardType.legacyBonus, value: 500),
-      ConjectureReward(type: RewardType.productionMultiplier, value: 0.5, target: 'all'),
-      ConjectureReward(type: RewardType.cosmeticTitle, value: 0, title: 'Prime Summarizer'),
+      ConjectureReward(
+        type: RewardType.productionMultiplier,
+        value: 0.5,
+        target: 'all',
+      ),
+      ConjectureReward(
+        type: RewardType.cosmeticTitle,
+        value: 0,
+        title: 'Prime Summarizer',
+      ),
     ],
     retryCooldown: Duration(hours: 72),
     isEndgame: true,
@@ -279,8 +349,16 @@ const Map<String, ConjectureDef> conjectureCatalog = {
     progressPerWork: 2,
     successRewards: [
       ConjectureReward(type: RewardType.legacyBonus, value: 1000),
-      ConjectureReward(type: RewardType.productionMultiplier, value: 1.0, target: 'all'),
-      ConjectureReward(type: RewardType.cosmeticTitle, value: 0, title: 'Zero Hunter'),
+      ConjectureReward(
+        type: RewardType.productionMultiplier,
+        value: 1.0,
+        target: 'all',
+      ),
+      ConjectureReward(
+        type: RewardType.cosmeticTitle,
+        value: 0,
+        title: 'Zero Hunter',
+      ),
     ],
     retryCooldown: Duration(hours: 72),
     isEndgame: true,
@@ -295,8 +373,16 @@ const Map<String, ConjectureDef> conjectureCatalog = {
     progressPerWork: 2,
     successRewards: [
       ConjectureReward(type: RewardType.legacyBonus, value: 1000),
-      ConjectureReward(type: RewardType.productionMultiplier, value: 1.0, target: 'counting'),
-      ConjectureReward(type: RewardType.cosmeticTitle, value: 0, title: 'Complexity Breaker'),
+      ConjectureReward(
+        type: RewardType.productionMultiplier,
+        value: 1.0,
+        target: 'counting',
+      ),
+      ConjectureReward(
+        type: RewardType.cosmeticTitle,
+        value: 0,
+        title: 'Complexity Breaker',
+      ),
     ],
     retryCooldown: Duration(hours: 72),
     isEndgame: true,
@@ -311,8 +397,16 @@ const Map<String, ConjectureDef> conjectureCatalog = {
     progressPerWork: 2,
     successRewards: [
       ConjectureReward(type: RewardType.legacyBonus, value: 1000),
-      ConjectureReward(type: RewardType.productionMultiplier, value: 1.0, target: 'proofing'),
-      ConjectureReward(type: RewardType.cosmeticTitle, value: 0, title: 'Flow Whisperer'),
+      ConjectureReward(
+        type: RewardType.productionMultiplier,
+        value: 1.0,
+        target: 'proofing',
+      ),
+      ConjectureReward(
+        type: RewardType.cosmeticTitle,
+        value: 0,
+        title: 'Flow Whisperer',
+      ),
     ],
     retryCooldown: Duration(hours: 72),
     isEndgame: true,
@@ -327,8 +421,16 @@ const Map<String, ConjectureDef> conjectureCatalog = {
     progressPerWork: 2,
     successRewards: [
       ConjectureReward(type: RewardType.legacyBonus, value: 1000),
-      ConjectureReward(type: RewardType.productionMultiplier, value: 0.5, target: 'all'),
-      ConjectureReward(type: RewardType.cosmeticTitle, value: 0, title: 'Topologist Supreme'),
+      ConjectureReward(
+        type: RewardType.productionMultiplier,
+        value: 0.5,
+        target: 'all',
+      ),
+      ConjectureReward(
+        type: RewardType.cosmeticTitle,
+        value: 0,
+        title: 'Topologist Supreme',
+      ),
     ],
     retryCooldown: Duration(hours: 72),
     isEndgame: true,
@@ -343,8 +445,16 @@ const Map<String, ConjectureDef> conjectureCatalog = {
     progressPerWork: 2,
     successRewards: [
       ConjectureReward(type: RewardType.legacyBonus, value: 1000),
-      ConjectureReward(type: RewardType.productionMultiplier, value: 1.0, target: 'all'),
-      ConjectureReward(type: RewardType.cosmeticTitle, value: 0, title: 'Elliptic Sage'),
+      ConjectureReward(
+        type: RewardType.productionMultiplier,
+        value: 1.0,
+        target: 'all',
+      ),
+      ConjectureReward(
+        type: RewardType.cosmeticTitle,
+        value: 0,
+        title: 'Elliptic Sage',
+      ),
     ],
     retryCooldown: Duration(hours: 72),
     isEndgame: true,
@@ -354,6 +464,9 @@ const Map<String, ConjectureDef> conjectureCatalog = {
 /// Catalog ordered by tier (then id) for UI grouping and iteration.
 List<ConjectureDef> conjecturesByTier() {
   final list = conjectureCatalog.values.toList()
-    ..sort((a, b) => a.tier == b.tier ? a.id.compareTo(b.id) : a.tier.compareTo(b.tier));
+    ..sort(
+      (a, b) =>
+          a.tier == b.tier ? a.id.compareTo(b.id) : a.tier.compareTo(b.tier),
+    );
   return list;
 }

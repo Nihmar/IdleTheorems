@@ -40,10 +40,7 @@ class IdleGame extends FlameGame with RiverpodGameMixin, TapCallbacks {
     final w = size.x;
     final h = size.y;
     // Paper board.
-    canvas.drawRect(
-      Rect.fromLTWH(0, 0, w, h),
-      Paint()..color = Palette.paper,
-    );
+    canvas.drawRect(Rect.fromLTWH(0, 0, w, h), Paint()..color = Palette.paper);
     // Faint grid.
     final gridPaint = Paint()
       ..strokeWidth = 1

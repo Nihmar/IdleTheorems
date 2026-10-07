@@ -9,7 +9,8 @@ abstract class PaperConfig {
   static const double costGrowth = 1.05;
   static const double writeDurationSeconds = 60;
   static const double baseFame = 25;
-  static const double famePerPaperBonus = 0.1; // Fame scales with (1 + 0.1 * papers)
+  static const double famePerPaperBonus =
+      0.1; // Fame scales with (1 + 0.1 * papers)
   static const double revisionFameMultiplier = 1.25;
   // Peer review base probabilities.
   static const double pAccept = 0.60;

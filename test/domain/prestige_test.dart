@@ -43,8 +43,9 @@ void main() {
     test('prestige keeps what §13.9 says persists and resets the rest', () {
       final s = richState();
       // One proven conjecture survives with its multiplier.
-      s.conjectures.add(ConjectureState(
-          defId: 'twin_primes', status: ConjectureStatus.proven));
+      s.conjectures.add(
+        ConjectureState(defId: 'twin_primes', status: ConjectureStatus.proven),
+      );
       s.conjectureCountingMult = 1.25;
       s.prestige.mathematicians.add('gauss');
 
@@ -89,20 +90,26 @@ void main() {
 
   group('mathematician perks wiring', () {
     test('lifetime Legacy adds +2% per point to every channel', () {
-      final base = const ProductionSystem()
-          .compute(GameState()..producerLevels['guided_exercises'] = 2);
-      final boosted = const ProductionSystem().compute(GameState()
-        ..producerLevels['guided_exercises'] = 2
-        ..prestige.legacyAllTime = 5);
+      final base = const ProductionSystem().compute(
+        GameState()..producerLevels['guided_exercises'] = 2,
+      );
+      final boosted = const ProductionSystem().compute(
+        GameState()
+          ..producerLevels['guided_exercises'] = 2
+          ..prestige.legacyAllTime = 5,
+      );
       expect(boosted.countingPerSec / base.countingPerSec, closeTo(1.1, 1e-9));
     });
 
     test('Gauss doubles Counting production', () {
-      final base = const ProductionSystem()
-          .compute(GameState()..producerLevels['guided_exercises'] = 2);
-      final gauss = const ProductionSystem().compute(GameState()
-        ..producerLevels['guided_exercises'] = 2
-        ..prestige.mathematicians.add('gauss'));
+      final base = const ProductionSystem().compute(
+        GameState()..producerLevels['guided_exercises'] = 2,
+      );
+      final gauss = const ProductionSystem().compute(
+        GameState()
+          ..producerLevels['guided_exercises'] = 2
+          ..prestige.mathematicians.add('gauss'),
+      );
       expect(gauss.countingPerSec / base.countingPerSec, closeTo(2, 1e-9));
     });
 
@@ -114,16 +121,21 @@ void main() {
       final onAlgebra = const ProductionSystem().compute(state);
       state.activeSubjectId = 'topology';
       final offAlgebra = const ProductionSystem().compute(state);
-      expect(onAlgebra.proofingPerSec / offAlgebra.proofingPerSec, closeTo(2, 1e-9));
+      expect(
+        onAlgebra.proofingPerSec / offAlgebra.proofingPerSec,
+        closeTo(2, 1e-9),
+      );
     });
 
     test('Euler doubles citation Fame', () {
-      final base = const ProductionSystem()
-          .compute(GameState()..papersInRun = 10);
-      final euler = const ProductionSystem()
-          .compute(GameState()
-            ..papersInRun = 10
-            ..prestige.mathematicians.add('euler'));
+      final base = const ProductionSystem().compute(
+        GameState()..papersInRun = 10,
+      );
+      final euler = const ProductionSystem().compute(
+        GameState()
+          ..papersInRun = 10
+          ..prestige.mathematicians.add('euler'),
+      );
       expect(euler.famePerSec / base.famePerSec, closeTo(2, 1e-9));
     });
 
@@ -141,9 +153,10 @@ void main() {
     test('raises conjecture success probability by 10 points', () {
       final svc = ConjectureSystem();
       expect(
-          svc.successProbability(3, 2, ramanujanBonus: 0.1) -
-              svc.successProbability(3, 2),
-          closeTo(0.1, 1e-9));
+        svc.successProbability(3, 2, ramanujanBonus: 0.1) -
+            svc.successProbability(3, 2),
+        closeTo(0.1, 1e-9),
+      );
     });
   });
 }

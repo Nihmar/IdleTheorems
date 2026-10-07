@@ -15,18 +15,23 @@ class FrictionSystem {
   static const double retractionChance = 0.05;
   static const Duration retractionDelay = Duration(minutes: 10);
   static const double retractionFameLossFraction = 0.20;
+
   /// Consolation Metodo XP when an error surfaces (learning, not punishment).
   static const int retractionMethodXp = 5;
 
   // ------------------------------------------------------------- burnout
   static const int overloadPaperThreshold = 5;
+
   /// Full stress bar in ~15 minutes of sustained overload.
   static const double stressPerSecondOverloaded = 1 / 900;
+
   /// Stress fades over ~30 calm minutes.
   static const double stressDecayPerSecond = 1 / 1800;
   static const Duration burnoutDuration = Duration(hours: 1);
+
   /// Residual stress left behind once a burnout episode ends.
   static const double postBurnoutStress = 0.5;
+
   /// Sabbatical price: fraction of current Fame (section 13.10).
   static const double sabbaticalCostFraction = 0.10;
 
@@ -46,7 +51,8 @@ class FrictionSystem {
   void maybeScheduleRetraction(GameState s, Random rng, [DateTime? now]) {
     if (rng.nextDouble() < retractionChance) {
       s.scheduledRetractions.add(
-          ScheduledRetraction((now ?? DateTime.now()).add(retractionDelay)));
+        ScheduledRetraction((now ?? DateTime.now()).add(retractionDelay)),
+      );
     }
   }
 
@@ -62,7 +68,9 @@ class FrictionSystem {
         s.resources.fame -= loss;
         s.stats.retractions++;
         s.scheduledRetractions.remove(r);
-        notices.add('A reviewer found an old error: -${formatNumber(loss)} Fame');
+        notices.add(
+          'A reviewer found an old error: -${formatNumber(loss)} Fame',
+        );
       }
     }
 
@@ -74,7 +82,9 @@ class FrictionSystem {
       if ((s.stress >= 1.0 - 1e-9) && !isBurnedOut(s, t)) {
         s.burnedOutUntil = t.add(burnoutDuration);
         s.stress = postBurnoutStress;
-        notices.add('Burnout! Production halved for ${burnoutDuration.inHours} h');
+        notices.add(
+          'Burnout! Production halved for ${burnoutDuration.inHours} h',
+        );
       }
     } else {
       s.stress = (s.stress - stressDecayPerSecond * dt).clamp(0.0, 1.0);

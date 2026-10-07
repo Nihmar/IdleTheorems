@@ -36,7 +36,10 @@ class ResourceCounter extends StatelessWidget {
             children: [
               Icon(icon, size: 14, color: Palette.inkSoft),
               const SizedBox(width: 6),
-              Text(label, style: const TextStyle(color: Palette.inkSoft, fontSize: 12)),
+              Text(
+                label,
+                style: const TextStyle(color: Palette.inkSoft, fontSize: 12),
+              ),
             ],
           ),
           const SizedBox(height: 2),
@@ -51,7 +54,11 @@ class ResourceCounter extends StatelessWidget {
           ),
           Text(
             '+${formatRate(perSecond)}',
-            style: const TextStyle(fontFamily: 'monospace', fontSize: 11, color: Palette.inkSoft),
+            style: const TextStyle(
+              fontFamily: 'monospace',
+              fontSize: 11,
+              color: Palette.inkSoft,
+            ),
           ),
         ],
       ),
