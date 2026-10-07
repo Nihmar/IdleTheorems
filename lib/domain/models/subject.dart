@@ -195,7 +195,7 @@ const Map<String, SubjectDef> subjectCatalog = {
     level: 2,
     prereqs: ['probability', 'discrete_algebra'],
     effects: SubjectEffects(),
-    effectText: 'Reveals the next research trend early (coming soon)',
+    effectText: 'Always reveals the next research trend',
   ),
   'stochastic_processes': SubjectDef(
     id: 'stochastic_processes',
@@ -203,7 +203,8 @@ const Map<String, SubjectDef> subjectCatalog = {
     level: 2,
     prereqs: ['probability', 'analysis'],
     effects: SubjectEffects(),
-    effectText: 'More intuition events during proofs (coming soon)',
+    effectText:
+        'Intuition events: 10% of conjecture sessions gain x1.5 progress',
   ),
   'measure_theory': SubjectDef(
     id: 'measure_theory',
