@@ -280,6 +280,39 @@ void main() {
     expect(s.resources.fame, 0);
   });
 
+  testWidgets('publication desk closes during No-Paper Run', (tester) async {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    final notifier = container.read(gameStateProvider.notifier);
+    notifier.bootstrap(GameState()..playerName = 'Blaise');
+    notifier.state.gain(0, 1e5, 0); // plenty of Proofing: affordability alone
+    // would keep the card enabled.
+    notifier.enterChallenge('no_paper_run');
+
+    await tester.pumpWidget(wrap(container));
+    await tester.tap(find.text('Shop'));
+    await tester.pumpAndSettle();
+    // The publication desk sits near the bottom of the lazy shop list.
+    for (
+      var i = 0;
+      i < 15 && find.textContaining('Publish paper').evaluate().isEmpty;
+      i++
+    ) {
+      await tester.dragFrom(const Offset(400, 500), const Offset(0, -400));
+      await tester.pumpAndSettle();
+    }
+    expect(find.textContaining('Publish paper'), findsOneWidget);
+    expect(
+      find.text('Closed while the No-Paper Run challenge is active.'),
+      findsOneWidget,
+    );
+    // Tapping must not start a paper nor spend anything.
+    await tester.tap(find.textContaining('Publish paper'));
+    await tester.pump();
+    expect(notifier.state.activePapers, isEmpty);
+    expect(notifier.state.resources.proofing, closeTo(1e5, 1e-9));
+  });
+
   testWidgets('active trend shows its chip and the telegraphed successor', (
     tester,
   ) async {
