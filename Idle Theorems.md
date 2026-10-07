@@ -132,7 +132,7 @@ Rotazioni periodiche del peso Fame per materia, sempre **causate da eventi narra
 
 ### Note di bilanciamento
 
-- **Completamento ramo** = masterizzare N teoremi: 8 (Lv1) → 12 (Lv2) → 16 (Lv3) → 20 (Lv4). Costi concreti in §13.6.
+- **Completamento ramo** = masterizzare N teoremi tramite paper accettati nel campo focalizzato (§13.6): 4 (Lv0) → 8 (Lv1) → 12 (Lv2) → 16 (Lv3) → 20 (Lv4).
 - **Sinergia > somma**: ogni ramo composto dà un piccolo bonus extra oltre gli effetti dei genitori — è la ricompensa per l'investimento doppio.
 - I tier delle congetture agganciano i livelli: tier 1–2 nei rami Lv1–2, tier 3–4 nei composti, tier 5 solo endgame. La difficoltà delle scoperte sale *insieme* alla profondità dell'albero.
 
@@ -528,18 +528,23 @@ Probabilità base modificata da: Probabilità (+10% accettazione), Eulero (Fame 
 | Collaboratore | 250 F | 1.35 | Proofing +50% |
 | Seminario | 2,000 C | 1.3 | Fame +50% |
 
-### 13.6 Materie: costo teoremi
+### 13.6 Materie: mastery tramite paper
 
-Completamento = N teoremi masterizzati nel ramo (§3), costo crescente 1.5× l'uno dopo l'altro.
+Completamento = N teoremi masterizzati nel ramo (§3). Il vecchio bozzetto con prezzo diretto per teorema (costo crescente 1.5×: primo teorema 100/1k/10k/100k P) è stato **superato**: ogni paper accettato vale un teorema masterizzato del campo focalizzato, senza costo aggiuntivo oltre quello del paper stesso.
 
-| Livello | Teoremi | Primo teorema (P) | Totale approssimato |
-|---|---|---|---|
-| Lv1 | 8 | 100 | ≈ 5,000 P |
-| Lv2 | 12 | 1,000 | ≈ 257,000 P |
-| Lv3 | 16 | 10,000 | ≈ 13.1M P |
-| Lv4 | 20 | 100,000 | ≈ 665M P |
+Loop: focalizza un campo sbloccato e incompleto → scrivi paper (l'n-esimo della run costa 100 × 1.05ⁿ Proofing, §13.4) → peer review (accettazione 60% / revisione 30% al costo dimezzato / rifiuto 10%) → l'accettazione accredita un teorema e paga la Fame (25 × moltiplicatori × (1 + 0.1 · paper pubblicati nella run); x1.25 se il paper ha superato una revisione). I rifiuti non accreditano nulla ma danno XP Metodo.
+
+| Livello | Teoremi richiesti (= paper accettati minimi) |
+|---|---|
+| Lv0 | 4 |
+| Lv1 | 8 |
+| Lv2 | 12 |
+| Lv3 | 16 |
+| Lv4 | 20 |
 
 I rami composti richiedono i genitori già completati (gate narrativo).
+
+Nota: il costo effettivo di un completamento dipende dai roll di revisione (revisioni e rifiuti lo allungano), quindi non esiste più un "totale P" fisso come nel vecchio bozzetto; le ancore di ritmo restano quelle di §13.11.
 
 ### 13.7 Congetture: tabella tier completa
 
