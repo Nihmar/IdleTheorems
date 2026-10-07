@@ -12,9 +12,27 @@ from pathlib import Path
 
 import yaml
 
-# La policy Wikimedia chiede un contatto reale nello User-Agent
-UA = ("IdleTheorems-research/0.1 "
-      "(ricerca per game design matematico; contatto: TU@example.com)")
+# La policy Wikimedia richiede un contatto reale nello User-Agent:
+# viene fornito tramite la variabile d'ambiente IDLE_THEOREMS_UA_CONTACT
+# (email o sito web), mai hardcodato qui.
+CONTACT_ENV = "IDLE_THEOREMS_UA_CONTACT"
+
+
+def build_user_agent():
+    contact = os.environ.get(CONTACT_ENV, "").strip()
+    if not contact:
+        raise SystemExit(
+            f"missing {CONTACT_ENV}: set your email or website so the "
+            "Wikipedia API receives a compliant User-Agent, e.g.\n"
+            f"  export {CONTACT_ENV}=you@example.com"
+        )
+    return (
+        "IdleTheorems-research/0.1 "
+        f"(research for mathematical game design; contact: {contact})"
+    )
+
+
+UA = build_user_agent()
 
 # Match a inizio parola: niente falsi positivi tipo "Prisoner's dilemma";
 # i prefissi coprono anche i plurali (teoremi, lemmi, corollari, congetture...)
