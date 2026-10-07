@@ -15,6 +15,13 @@ import '../ui/theme/palette.dart';
 class IdleGame extends FlameGame with RiverpodGameMixin, TapCallbacks {
   GameStateNotifier? _notifier;
 
+  /// Paints reused across frames (plan section 10: no per-frame allocation).
+  late final Paint _paperPaint = Paint()..color = Palette.paper;
+  late final Paint _gridPaint = Paint()
+    ..strokeWidth = 1
+    ..style = PaintingStyle.stroke
+    ..color = Palette.gridLine;
+
   @override
   Future<void> onLoad() async {
     super.onLoad();
@@ -40,18 +47,14 @@ class IdleGame extends FlameGame with RiverpodGameMixin, TapCallbacks {
     final w = size.x;
     final h = size.y;
     // Paper board.
-    canvas.drawRect(Rect.fromLTWH(0, 0, w, h), Paint()..color = Palette.paper);
+    canvas.drawRect(Rect.fromLTWH(0, 0, w, h), _paperPaint);
     // Faint grid.
-    final gridPaint = Paint()
-      ..strokeWidth = 1
-      ..style = PaintingStyle.stroke
-      ..color = Palette.gridLine;
     const step = 64.0;
     for (double x = step; x < w; x += step) {
-      canvas.drawLine(Offset(x, 0), Offset(x, h), gridPaint);
+      canvas.drawLine(Offset(x, 0), Offset(x, h), _gridPaint);
     }
     for (double y = step; y < h; y += step) {
-      canvas.drawLine(Offset(0, y), Offset(w, y), gridPaint);
+      canvas.drawLine(Offset(0, y), Offset(w, y), _gridPaint);
     }
   }
 }
