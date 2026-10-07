@@ -20,6 +20,7 @@ import '../game/systems/prestige_service.dart';
 import '../game/systems/trend_service.dart';
 import '../game/systems/production_system.dart';
 import '../game/systems/review_service.dart';
+import '../utils/number_format.dart';
 
 final gameStateProvider = NotifierProvider<GameStateNotifier, GameState>(
   GameStateNotifier.new,
@@ -206,7 +207,7 @@ class GameStateNotifier extends Notifier<GameState> {
     final def = _apprentices.hire(state);
     if (def == null) return false;
     _notice(
-      '${def.name} joins your laboratory (+${def.countingPerSec.toStringAsFixed(0)} Counting/s).',
+      '${def.name} joins your laboratory (+${formatNumber(def.countingPerSec)} Counting/s).',
     );
     _afterMutation();
     return true;
