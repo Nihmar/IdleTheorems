@@ -36,9 +36,8 @@ String formatNumber(double value) {
   return _signed(negative, body);
 }
 
-/// Formats a per-second rate with one extra digit of precision.
-String formatRate(double valuePerSec) => '$formatNumber/s'
-    .replaceAll('$formatNumber', formatNumber(valuePerSec));
+/// Formats a per-second rate.
+String formatRate(double valuePerSec) => '${formatNumber(valuePerSec)}/s';
 
 String _signed(bool negative, String body) => negative ? '-$body' : body;
 
