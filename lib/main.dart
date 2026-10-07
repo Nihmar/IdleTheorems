@@ -13,6 +13,7 @@ import 'domain/services/subject_service.dart';
 import 'game/idle_game.dart';
 import 'providers/game_state_provider.dart';
 import 'ui/overlays/main_overlay.dart';
+import 'ui/theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -82,7 +83,7 @@ class IdleTheoremsApp extends StatelessWidget {
     return MaterialApp(
       title: 'Idle Theorems',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData.dark(useMaterial3: true),
+      theme: AppTheme.data,
       home: GameScreen(saveNow: saveNow, onResumed: onResumed),
     );
   }

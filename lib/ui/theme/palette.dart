@@ -45,4 +45,7 @@ abstract final class Palette {
 
   /// Rust red for retractions, burnout and other hazards.
   static const Color danger = Color(0xFFB4543A);
+
+  /// Warm near-white for text/icons sitting on action/accent fills.
+  static const Color onFill = Color(0xFFFDF9EF);
 }
