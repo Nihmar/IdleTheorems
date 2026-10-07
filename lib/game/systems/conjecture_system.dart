@@ -16,8 +16,9 @@ class ConjectureSystem {
   final Random _rng;
   final SubjectService _subjects = const SubjectService();
 
-  /// Hard caps (section 4 rules table).
-  static const int maxActiveGlobal = 2;
+  /// Global active-conjecture cap: base from the section 4 rules table,
+  /// raised by completed subjects (see SubjectService.maxActiveConjectures).
+  int maxActive(GameState s) => _subjects.maxActiveConjectures(s);
 
   /// Intuition events (v0 draft): completing Stochastic Processes gives each
   /// session a chance of free extra progress — the "aha!" moment.
@@ -82,7 +83,7 @@ class ConjectureSystem {
   bool slotsAvailable(GameState s, String id) {
     final d = conjectureCatalog[id];
     if (d == null) return false;
-    if (activeCount(s) >= maxActiveGlobal) return false;
+    if (activeCount(s) >= maxActive(s)) return false;
     return !_sharesSubject(s, d);
   }
 

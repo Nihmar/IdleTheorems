@@ -61,6 +61,9 @@ class SubjectEffects {
   /// Extra concurrent paper slots.
   final int extraPapers;
 
+  /// Extra active-conjecture slots (§3 master table).
+  final int extraConjectures;
+
   /// x on the offline progression cap duration.
   final double offlineCapMult;
 
@@ -89,6 +92,7 @@ class SubjectEffects {
     this.upgradeCostFactor = 1,
     this.acceptanceBonus = 0,
     this.extraPapers = 0,
+    this.extraConjectures = 0,
     this.offlineCapMult = 1,
     this.legacyGainMult = 1,
     this.sessionCompounding = false,
@@ -180,8 +184,10 @@ const Map<String, SubjectDef> subjectCatalog = {
     name: 'Topology',
     level: 2,
     prereqs: ['analysis', 'geometry'],
-    effects: SubjectEffects(extraPapers: 1),
-    effectText: '+1 concurrent paper slot',
+    // Paper slot kept for burnout reachability (§13.10 needs several
+    // simultaneous papers); the documented lever is the conjecture slot.
+    effects: SubjectEffects(extraPapers: 1, extraConjectures: 1),
+    effectText: '+1 concurrent paper slot, +1 active conjecture',
   ),
   'statistics': SubjectDef(
     id: 'statistics',

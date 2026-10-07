@@ -16,6 +16,7 @@ class SubjectModifiers {
   final double upgradeCostFactor;
   final double acceptanceBonus;
   final int extraPapers;
+  final int extraConjectures;
   final double offlineCapMult;
   final double legacyGainMult;
   final bool sessionCompounding;
@@ -35,6 +36,7 @@ class SubjectModifiers {
     this.upgradeCostFactor = 1,
     this.acceptanceBonus = 0,
     this.extraPapers = 0,
+    this.extraConjectures = 0,
     this.offlineCapMult = 1,
     this.legacyGainMult = 1,
     this.sessionCompounding = false,
@@ -80,6 +82,13 @@ class SubjectService {
     return slots;
   }
 
+  /// Base global cap on active conjectures before subject bonuses (§4).
+  static const int baseMaxActiveConjectures = 2;
+
+  /// Global cap right now: base plus every completed subject's bonus.
+  int maxActiveConjectures(GameState s) =>
+      baseMaxActiveConjectures + modifiers(s).extraConjectures;
+
   /// Focus research on an unlocked, incomplete subject. Returns false when
   /// the target is locked or already complete.
   bool setFocus(GameState s, String id) {
@@ -123,7 +132,8 @@ class SubjectService {
   SubjectModifiers modifiers(GameState s) {
     var click = 1.0, cAdd = 0.0, pAdd = 0.0, cMult = 1.0, pMult = 1.0;
     var fame = 1.0, burstC = 0.0, burstM = 1.0, paperCost = 1.0, upgCost = 1.0;
-    var accept = 0.0, papers = 0, offline = 1.0, legacy = 1.0, global = 1.0;
+    var accept = 0.0, papers = 0, conj = 0, offline = 1.0, legacy = 1.0;
+    var global = 1.0;
     var perThm = 0.0;
     var compounding = false;
     for (final def in subjectCatalog.values) {
@@ -141,6 +151,7 @@ class SubjectService {
       upgCost *= e.upgradeCostFactor;
       accept += e.acceptanceBonus;
       papers += e.extraPapers;
+      conj += e.extraConjectures;
       offline *= e.offlineCapMult;
       legacy *= e.legacyGainMult;
       global *= e.globalResourceMult;
@@ -162,6 +173,7 @@ class SubjectService {
       upgradeCostFactor: upgCost,
       acceptanceBonus: accept.clamp(0.0, 0.45),
       extraPapers: papers,
+      extraConjectures: conj,
       offlineCapMult: offline,
       legacyGainMult: legacy,
       sessionCompounding: compounding,
