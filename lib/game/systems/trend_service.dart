@@ -66,14 +66,17 @@ class TrendService {
   }
 
   /// Keeps the schedule current: fills an empty calendar and rolls the
-  /// chain forward whenever the active slot expired. After a long absence
-  /// the window resyncs to "now" instead of replaying missed slots.
+  /// chain forward whenever the active slot expired. At most one missed
+  /// window honours its scheduled boundary; once a whole rotation or more
+  /// has been missed (long absence) the schedule resyncs to "now" instead
+  /// of replaying every missed slot frame by frame.
   void update(GameState s, [DateTime? now]) {
     final t = s.trend;
     final tNow = now ?? DateTime.now();
     if (!isActive(s, tNow)) {
       final start = t.nextStartsAt;
-      final begin = (start != null && !start.isAfter(tNow)) ? start : tNow;
+      final stale = start != null && start.isBefore(tNow.subtract(rotation));
+      final begin = (start == null || start.isAfter(tNow) || stale) ? tNow : start;
       t.activeSubject =
           t.nextSubject.isNotEmpty ? t.nextSubject : _pick(_candidates(s), begin);
       t.endsAt = begin.add(rotation);
