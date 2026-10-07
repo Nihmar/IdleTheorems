@@ -79,6 +79,7 @@ void main() {
       expect(m.countingRateAdd, 0);
       expect(m.paperCostFactor, 1);
       expect(m.extraPapers, 0);
+      expect(m.extraConjectures, 0);
       expect(m.globalResourceMult, 1);
     });
 
@@ -125,14 +126,15 @@ void main() {
       expect(svc.modifiers(s).countingMultiplier, closeTo(1 + 0.02 * 11, 1e-9));
     });
 
-    test('completed topology adds a concurrent paper slot', () {
-      expect(svc.maxConcurrentPapers(_state()), 1);
-      expect(
-        svc.maxConcurrentPapers(
-          _state(branches: {'topology': BranchProgress(completed: true)}),
-        ),
-        2,
+    test('completed topology adds paper and conjecture slots', () {
+      final top = _state(
+        branches: {'topology': BranchProgress(completed: true)},
       );
+      expect(svc.maxConcurrentPapers(_state()), 1);
+      expect(svc.maxConcurrentPapers(top), 2);
+      expect(svc.maxActiveConjectures(_state()), 2);
+      expect(svc.maxActiveConjectures(top), 3);
+      expect(svc.modifiers(top).extraConjectures, 1);
     });
   });
 }

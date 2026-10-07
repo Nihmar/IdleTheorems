@@ -79,6 +79,23 @@ void main() {
       expect(svc.activeCount(s), 2);
     });
 
+    test('completed topology raises the global cap to three', () {
+      final svc = ConjectureSystem();
+      final s = _postdoc(
+        completed: [
+          'discrete_algebra',
+          'analysis',
+          'number_theory',
+          'topology',
+        ],
+      );
+      expect(svc.maxActive(s), 3);
+      expect(svc.formulate(s, 'double_counting_lemmas'), isTrue);
+      expect(svc.formulate(s, 'integral_test_bounds'), isTrue);
+      expect(svc.formulate(s, 'euclid_numbers'), isTrue);
+      expect(svc.activeCount(s), 3);
+    });
+
     test('one active discovery per branch', () {
       final svc = ConjectureSystem();
       final s = _professor(completed: ['number_theory']);

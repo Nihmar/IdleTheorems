@@ -379,6 +379,7 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
     final services = const SubjectService();
     final mods = services.modifiers(s);
     final maxSlots = services.maxConcurrentPapers(s);
+    final maxDiscoveries = services.maxActiveConjectures(s);
     final papersInProgress = s.activePapers.length;
 
     return Column(
@@ -572,11 +573,11 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
                           ),
                       ] else if (_tab == 'conjectures') ...[
                         _sectionHeader('Discovery'),
-                        const Padding(
-                          padding: EdgeInsets.only(bottom: 8),
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
                           child: Text(
-                            'Formulate in completed fields, fund work sessions, roll at 100%. Failing teaches Metodo — and half the progress survives. Max 2 active discoveries.',
-                            style: TextStyle(
+                            'Formulate in completed fields, fund work sessions, roll at 100%. Failing teaches Metodo — and half the progress survives. Max $maxDiscoveries active discoveries.',
+                            style: const TextStyle(
                               color: Palette.inkSoft,
                               fontSize: 12,
                               height: 1.5,
